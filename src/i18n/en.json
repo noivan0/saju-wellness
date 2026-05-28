@@ -1,0 +1,184 @@
+{
+  "_comment": "SajuDam English i18n — Western astrology terms parallel",
+  "_version": "2.0.0",
+
+  "app": {
+    "name": "SajuDam",
+    "tagline": "Understanding Yourself Through East & West Astrology",
+    "disclaimer_short": "A Four Pillars self-understanding tool — not a substitute for counseling or medical care",
+    "disclaimer_full": "This content is self-understanding reference material from a Four Pillars and astrology perspective. It does not replace scientific prediction or professional counseling and medical services."
+  },
+
+  "common": {
+    "loading": "Analyzing...",
+    "error": "An error occurred. Please try again.",
+    "submit": "Analyze",
+    "back": "Back",
+    "share": "Share",
+    "save": "Save",
+    "close": "Close"
+  },
+
+  "input": {
+    "birth_year": "Birth Year",
+    "birth_month": "Birth Month",
+    "birth_day": "Birth Day",
+    "birth_hour": "Birth Hour (Optional)",
+    "birth_hour_hint": "You can skip this if you don't know your exact birth time",
+    "gender": "Gender",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "gender_other": "Prefer not to say",
+    "birthplace": "Birthplace (Optional)",
+    "birthplace_hint": "Used for precise Western astrology calculations"
+  },
+
+  "saju": {
+    "four_pillars": "Four Pillars of Destiny (BaZi)",
+    "year_pillar": "Year Pillar",
+    "month_pillar": "Month Pillar",
+    "day_pillar": "Day Pillar",
+    "hour_pillar": "Hour Pillar",
+    "heavenly_stem": "Heavenly Stems (10 Stems)",
+    "earthly_branch": "Earthly Branches (12 Branches)",
+    "five_elements": "Five Elements (Wu Xing)",
+    "elements": {
+      "wood": "Wood (木)",
+      "fire": "Fire (火)",
+      "earth": "Earth (土)",
+      "metal": "Metal (金)",
+      "water": "Water (水)"
+    },
+    "ten_gods": {
+      "bigyeon": "Parallel (比肩) — peers, competition",
+      "geopjae": "Rob Wealth (劫財) — partners, rivals",
+      "sikshin": "Eating God (食神) — talent, expression",
+      "sanggwan": "Hurting Officer (傷官) — creativity, rebellion",
+      "pyeonjae": "Indirect Wealth (偏財) — business, father",
+      "jeongjae": "Direct Wealth (正財) — stable income, spouse (for men)",
+      "pyeonggwan": "7 Killings (偏官/七殺) — authority, pressure",
+      "jeonggwan": "Direct Officer (正官) — career, reputation",
+      "pyeong_in": "Indirect Resource (偏印) — unconventional learning",
+      "jeong_in": "Direct Resource (正印) — education, mother"
+    },
+    "daewoon": "Grand Luck Period (大運)",
+    "saewoon": "Annual Luck (歲運)",
+    "yongshin": "Favorable Element (用神)",
+    "gishin": "Unfavorable Element (忌神)"
+  },
+
+  "astrology": {
+    "title": "Western Astrology",
+    "birth_chart": "Natal Chart",
+    "sun_sign": "Sun Sign",
+    "moon_sign": "Moon Sign",
+    "ascendant": "Ascendant (Rising Sign)",
+    "planets": {
+      "sun": "Sun",
+      "moon": "Moon",
+      "mercury": "Mercury",
+      "venus": "Venus",
+      "mars": "Mars",
+      "jupiter": "Jupiter",
+      "saturn": "Saturn",
+      "uranus": "Uranus",
+      "neptune": "Neptune",
+      "pluto": "Pluto"
+    },
+    "zodiac": {
+      "aries": "Aries",
+      "taurus": "Taurus",
+      "gemini": "Gemini",
+      "cancer": "Cancer",
+      "leo": "Leo",
+      "virgo": "Virgo",
+      "libra": "Libra",
+      "scorpio": "Scorpio",
+      "sagittarius": "Sagittarius",
+      "capricorn": "Capricorn",
+      "aquarius": "Aquarius",
+      "pisces": "Pisces"
+    },
+    "aspects": {
+      "conjunction": "Conjunction (0°)",
+      "sextile": "Sextile (60°)",
+      "square": "Square (90°)",
+      "trine": "Trine (120°)",
+      "opposition": "Opposition (180°)"
+    },
+    "houses": {
+      "1": "1st House — Self & Appearance",
+      "2": "2nd House — Wealth & Values",
+      "3": "3rd House — Communication",
+      "4": "4th House — Home & Roots",
+      "5": "5th House — Creativity & Romance",
+      "6": "6th House — Health & Daily Routine",
+      "7": "7th House — Partnership",
+      "8": "8th House — Transformation & Psychology",
+      "9": "9th House — Philosophy & Travel",
+      "10": "10th House — Career & Reputation",
+      "11": "11th House — Community & Dreams",
+      "12": "12th House — Subconscious & Spirituality"
+    },
+    "modalities": {
+      "cardinal": "Cardinal (Action)",
+      "fixed": "Fixed (Stability)",
+      "mutable": "Mutable (Adaptability)"
+    },
+    "elements": {
+      "fire": "Fire Signs (Aries, Leo, Sagittarius)",
+      "earth": "Earth Signs (Taurus, Virgo, Capricorn)",
+      "air": "Air Signs (Gemini, Libra, Aquarius)",
+      "water": "Water Signs (Cancer, Scorpio, Pisces)"
+    }
+  },
+
+  "sections": {
+    "personality": "💫 Personality Energy",
+    "fortune": "💰 Wealth & Career",
+    "love": "❤️ Love & Relationships",
+    "health": "🌿 Health Energy",
+    "yearly": "🌟 This Year's Fortune",
+    "daily": "☀️ Today's Energy",
+    "compatibility": "💑 Compatibility Analysis"
+  },
+
+  "labels": {
+    "academic_basis": "📚 Academic Basis",
+    "modern_interpretation": "💡 Modern Interpretation",
+    "practical_advice": "✅ Practical Advice",
+    "score": "Score",
+    "level": "Level",
+    "relation": "Relation"
+  },
+
+  "compatibility": {
+    "title": "Compatibility Analysis",
+    "score_label": "Compatibility Score",
+    "levels": {
+      "very_good": "Excellent",
+      "good": "Good",
+      "average": "Average",
+      "needs_effort": "Needs Effort"
+    },
+    "relations": {
+      "sheng": "Generating (相生)",
+      "ke": "Controlling (相剋)",
+      "bihua": "Same Energy (比和)",
+      "neutral": "Neutral"
+    }
+  },
+
+  "crisis": {
+    "message": "I can feel you're going through something really hard. Please reach out for support.",
+    "hotline_label": "988 Suicide & Crisis Lifeline",
+    "hotline_number": "988",
+    "hotline_hours": "24/7 — call or text"
+  },
+
+  "lang": {
+    "ko": "한국어",
+    "ja": "日本語",
+    "en": "English"
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "_comment": "사주담 한국어 i18n — 기본 언어 (ko)",
+  "_version": "2.0.0",
+
+  "app": {
+    "name": "사주담",
+    "tagline": "동서양 점성술로 나를 이해하는 여정",
+    "disclaimer_short": "명리학 자기이해 도구 — 심리상담/의료 대체 아님",
+    "disclaimer_full": "본 내용은 명리학 및 점성술 관점의 자기이해 참고 정보입니다. 과학적 예측이나 전문적 심리상담·의료 서비스를 대체하지 않습니다."
+  },
+
+  "common": {
+    "loading": "분석 중...",
+    "error": "오류가 발생했습니다. 다시 시도해주세요.",
+    "submit": "분석하기",
+    "back": "뒤로",
+    "share": "공유하기",
+    "save": "저장",
+    "close": "닫기"
+  },
+
+  "input": {
+    "birth_year": "출생 연도",
+    "birth_month": "출생 월",
+    "birth_day": "출생 일",
+    "birth_hour": "출생 시각 (선택)",
+    "birth_hour_hint": "시간을 모르면 생략해도 됩니다",
+    "gender": "성별",
+    "gender_male": "남성",
+    "gender_female": "여성",
+    "gender_other": "선택 안 함",
+    "birthplace": "출생지 (선택)",
+    "birthplace_hint": "서양 점성술 정밀 계산에 사용됩니다"
+  },
+
+  "saju": {
+    "four_pillars": "사주팔자",
+    "year_pillar": "연주(年柱)",
+    "month_pillar": "월주(月柱)",
+    "day_pillar": "일주(日柱)",
+    "hour_pillar": "시주(時柱)",
+    "heavenly_stem": "천간(天干)",
+    "earthly_branch": "지지(地支)",
+    "five_elements": "오행(五行)",
+    "elements": {
+      "wood": "목(木)",
+      "fire": "화(火)",
+      "earth": "토(土)",
+      "metal": "금(金)",
+      "water": "수(水)"
+    },
+    "ten_gods": {
+      "bigyeon": "비견(比肩)",
+      "geopjae": "겁재(劫財)",
+      "sikshin": "식신(食神)",
+      "sanggwan": "상관(傷官)",
+      "pyeonjae": "편재(偏財)",
+      "jeongjae": "정재(正財)",
+      "pyeonggwan": "편관(偏官)",
+      "jeonggwan": "정관(正官)",
+      "pyeong_in": "편인(偏印)",
+      "jeong_in": "정인(正印)"
+    },
+    "daewoon": "대운(大運)",
+    "saewoon": "세운(歲運)",
+    "yongshin": "용신(用神)",
+    "gishin": "기신(忌神)"
+  },
+
+  "astrology": {
+    "title": "서양 점성술",
+    "birth_chart": "출생 차트",
+    "sun_sign": "태양궁",
+    "moon_sign": "달궁",
+    "ascendant": "어센던트(상승궁)",
+    "planets": {
+      "sun": "태양",
+      "moon": "달",
+      "mercury": "수성",
+      "venus": "금성",
+      "mars": "화성",
+      "jupiter": "목성",
+      "saturn": "토성",
+      "uranus": "천왕성",
+      "neptune": "해왕성",
+      "pluto": "명왕성"
+    },
+    "zodiac": {
+      "aries": "양자리",
+      "taurus": "황소자리",
+      "gemini": "쌍둥이자리",
+      "cancer": "게자리",
+      "leo": "사자자리",
+      "virgo": "처녀자리",
+      "libra": "천칭자리",
+      "scorpio": "전갈자리",
+      "sagittarius": "사수자리",
+      "capricorn": "염소자리",
+      "aquarius": "물병자리",
+      "pisces": "물고기자리"
+    },
+    "aspects": {
+      "conjunction": "합(Conjunction)",
+      "sextile": "육분(Sextile)",
+      "square": "방(Square)",
+      "trine": "삼분(Trine)",
+      "opposition": "대립(Opposition)"
+    },
+    "houses": {
+      "1": "1하우스 — 자아·외모",
+      "2": "2하우스 — 재물·가치관",
+      "3": "3하우스 — 소통·형제",
+      "4": "4하우스 — 가정·뿌리",
+      "5": "5하우스 — 창조·연애",
+      "6": "6하우스 — 건강·일상",
+      "7": "7하우스 — 파트너십",
+      "8": "8하우스 — 변환·심리",
+      "9": "9하우스 — 철학·여행",
+      "10": "10하우스 — 커리어·명성",
+      "11": "11하우스 — 공동체·꿈",
+      "12": "12하우스 — 잠재·영성"
+    }
+  },
+
+  "sections": {
+    "personality": "💫 성격 에너지",
+    "fortune": "💰 재운·사업운",
+    "love": "❤️ 애정·관계운",
+    "health": "🌿 건강 에너지",
+    "yearly": "🌟 올해 운세",
+    "daily": "☀️ 오늘의 에너지",
+    "compatibility": "💑 궁합 분석"
+  },
+
+  "labels": {
+    "academic_basis": "📚 학문적 근거",
+    "modern_interpretation": "💡 현대적 해석",
+    "practical_advice": "✅ 실천 조언",
+    "score": "점수",
+    "level": "레벨",
+    "relation": "관계"
+  },
+
+  "compatibility": {
+    "title": "궁합 분석",
+    "score_label": "궁합 점수",
+    "levels": {
+      "very_good": "매우 좋음",
+      "good": "좋음",
+      "average": "보통",
+      "needs_effort": "노력 필요"
+    },
+    "relations": {
+      "sheng": "상생(相生)",
+      "ke": "상극(相剋)",
+      "bihua": "비화(比和)",
+      "neutral": "중립"
+    }
+  },
+
+  "crisis": {
+    "message": "힘드신 마음이 느껴집니다. 지금 바로 전문 상담사와 이야기해보세요.",
+    "hotline_label": "자살예방상담전화",
+    "hotline_number": "1393",
+    "hotline_hours": "24시간 무료"
+  },
+
+  "lang": {
+    "ko": "한국어",
+    "ja": "日本語",
+    "en": "English"
+  }
+}

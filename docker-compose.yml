@@ -1,0 +1,93 @@
+version: "3.9"
+
+# 사주담 (Saju Wellness) — docker-compose
+# 구성: app + postgres + redis
+# 법적: 문화·오락 서비스 (심리상담/의료 아님)
+
+services:
+  # ─────────────────────────────────────────────
+  # API 서버
+  # ─────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: saju-wellness:latest
+    container_name: saju-wellness-api
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://saju:${DB_PASSWORD}@db:5432/saju_db
+      - REDIS_URL=redis://redis:6379/0
+      - DEFAULT_LANG=ko
+      - SERVICE_TYPE=entertainment-lifestyle
+      - DISCLAIMER_ENABLED=true
+      - CRISIS_LINE_KR=1393
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - saju-net
+
+  # ─────────────────────────────────────────────
+  # PostgreSQL 16
+  # ─────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: saju-wellness-db
+    environment:
+      POSTGRES_DB: saju_db
+      POSTGRES_USER: saju
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=ko_KR.UTF-8"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saju -d saju_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - saju-net
+
+  # ─────────────────────────────────────────────
+  # Redis 7 (캐시 + 세션)
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: saju-wellness-redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - saju-net
+
+volumes:
+  pg_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  saju-net:
+    driver: bridge

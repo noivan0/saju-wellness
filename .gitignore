@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# 환경변수
+.env
+.env.*
+*.pem
+*.key
+
+# DB
+*.db
+*.sqlite
+
+# 가상환경
+venv/
+.venv/
+env/
+
+# 로그
+*.log
+logs/
+
+# pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
