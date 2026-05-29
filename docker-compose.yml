@@ -1,93 +1,67 @@
 version: "3.9"
 
-# 사주담 (Saju Wellness) — docker-compose
-# 구성: app + postgres + redis
-# 법적: 문화·오락 서비스 (심리상담/의료 아님)
+# ────────────────────────────────────────────────────────────────
+# 사주담 (Saju Wellness) — Docker Compose
+#
+# 빠른 시작:
+#   git clone https://github.com/noivan0/saju-wellness.git
+#   cd saju-wellness
+#   cp .env.example .env        # DB_PASSWORD, SECRET_KEY, ANTHROPIC_API_KEY 설정
+#   docker compose up -d
+#   # http://localhost:8002/app
+# ────────────────────────────────────────────────────────────────
 
 services:
-  # ─────────────────────────────────────────────
-  # API 서버
-  # ─────────────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runtime
-    image: saju-wellness:latest
     container_name: saju-wellness-api
     ports:
-      - "8001:8000"
+      - "${HOST_PORT:-8002}:8000"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://saju:${DB_PASSWORD}@db:5432/saju_db
-      - REDIS_URL=redis://redis:6379/0
-      - DEFAULT_LANG=ko
-      - SERVICE_TYPE=entertainment-lifestyle
-      - DISCLAIMER_ENABLED=true
-      - CRISIS_LINE_KR=1393
+      DB_HOST: db
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/1
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    networks:
-      - saju-net
+      start_period: 40s
 
-  # ─────────────────────────────────────────────
-  # PostgreSQL 16
-  # ─────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: saju-wellness-db
     environment:
-      POSTGRES_DB: saju_db
-      POSTGRES_USER: saju
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=ko_KR.UTF-8"
+      POSTGRES_DB: ${DB_NAME:-saju_db}
+      POSTGRES_USER: ${DB_USER:-saju}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-saju_secret}
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - saju_db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U saju -d saju_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-saju} -d ${DB_NAME:-saju_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
     restart: unless-stopped
-    networks:
-      - saju-net
 
-  # ─────────────────────────────────────────────
-  # Redis 7 (캐시 + 세션)
-  # ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: saju-wellness-redis
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
     restart: unless-stopped
-    networks:
-      - saju-net
+    volumes:
+      - saju_redis_data:/data
 
 volumes:
-  pg_data:
-    driver: local
-  redis_data:
-    driver: local
-
-networks:
-  saju-net:
-    driver: bridge
+  saju_db_data:
+  saju_redis_data:
