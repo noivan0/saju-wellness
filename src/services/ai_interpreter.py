@@ -8,14 +8,32 @@ import anthropic
 from functools import lru_cache
 
 _client = None
+_async_client = None
+
+
+def _get_async_client():
+    """AsyncAnthropic 클라이언트 (asyncio 환경용)"""
+    global _async_client
+    if _async_client is None:
+        key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not key:
+            return None
+        try:
+            _async_client = anthropic.AsyncAnthropic(
+                api_key=key,
+                base_url="https://h-chat-api.autoever.com/claude-code/v2",
+            )
+        except Exception:
+            return None
+    return _async_client
 
 
 def _extract_json(raw: str) -> dict:
-    """AI 응답에서 JSON 추출 — 코드블록·이스케이프 문자 내성 있는 파서"""
+    """AI 응답에서 JSON 추출 — 코드블록·이스케이프 문자 내성 있는 파서. 잘린 JSON도 복구 시도."""
     if not raw:
         return {}
-    # 1) 마크다운 코드블록 제거
     import re
+    # 1) 마크다운 코드블록 제거
     raw = re.sub(r'```(?:json)?\s*', '', raw).strip()
     raw = re.sub(r'```\s*$', '', raw).strip()
     # 2) json.JSONDecoder.raw_decode 로 첫 JSON 객체 추출
@@ -27,7 +45,27 @@ def _extract_json(raw: str) -> dict:
         obj, _ = decoder.raw_decode(raw, start)
         return obj if isinstance(obj, dict) else {}
     except json.JSONDecodeError:
-        return {}
+        # 3) 잘린 JSON 복구: 닫히지 않은 중괄호/문자열 닫기
+        truncated = raw[start:]
+        # 열린 문자열 닫기
+        if truncated.count('"') % 2 == 1:
+            truncated += '"'
+        # 열린 배열 닫기
+        open_brackets = truncated.count('[') - truncated.count(']')
+        if open_brackets > 0:
+            truncated += ']' * open_brackets
+        # 마지막 불완전한 키-값 쌍 제거 (콤마로 끝나거나 키만 있는 경우)
+        truncated = re.sub(r',\s*"[^"]*"?\s*$', '', truncated)
+        truncated = re.sub(r',\s*$', '', truncated)
+        # 열린 중괄호 닫기
+        open_braces = truncated.count('{') - truncated.count('}')
+        if open_braces > 0:
+            truncated += '}' * open_braces
+        try:
+            obj, _ = decoder.raw_decode(truncated, 0)
+            return obj if isinstance(obj, dict) else {}
+        except json.JSONDecodeError:
+            return {}
 
 
 def _get_client():
@@ -61,20 +99,32 @@ def _call_ai(prompt: str, system: str = None, max_tokens: int = 800) -> str:
     """AI 호출 공통 함수. 실패 시 빈 문자열 반환."""
     client = _get_client()
     if not client:
+        import logging
+        logging.warning("[SajuAI] client=None (ANTHROPIC_API_KEY 미설정?)")
         return ""
     try:
         create_kwargs = {
             "model": "claude-sonnet-4-6",
             "max_tokens": max_tokens,
+            "timeout": 45.0,
             "messages": [{"role": "user", "content": prompt}],
         }
         if system:
             create_kwargs["system"] = system
         resp = client.messages.create(**create_kwargs)
-        return resp.content[0].text if resp.content else ""
-    except Exception as e:
+        text = resp.content[0].text if resp.content else ""
         import logging
-        logging.warning(f"[SajuAI] API 오류: {e}")
+        logging.warning(f"[SajuAI] 응답 {len(text)}자, stop={resp.stop_reason}")
+        print(f"[SajuAI] 응답 {len(text)}자, stop={resp.stop_reason}", flush=True)
+        return text
+    except Exception as e:
+        import logging, traceback
+        msg = f"[SajuAI] API 오류: {type(e).__name__}: {e}"
+        logging.warning(msg)
+        print(msg, flush=True)
+        tb = traceback.format_exc()[-500:]
+        logging.warning(f"[SajuAI] traceback: {tb}")
+        print(f"[SajuAI] traceback: {tb}", flush=True)
         return ""
 
 
@@ -85,11 +135,19 @@ SAJU_SYSTEM = (
 )
 
 
-@lru_cache(maxsize=60)
+# lru_cache 대신 dict 캐시 — 빈 결과는 캐싱하지 않음
+_saju_full_cache: dict = {}
+
 def _interpret_saju_full_cached(day_pillar: str, gender: str, year_pillar: str,
                                  month_pillar: str, year_el: str, month_el: str,
                                  day_el: str, hour_pillar: str, primary_el: str) -> str:
-    """캐시 적용된 AI 사주 해석 — 동일 일주+성별 반복 요청 시 캐시 반환."""
+    """캐시 적용된 AI 사주 해석 — 동일 일주+성별 반복 요청 시 캐시 반환. 빈 결과는 캐싱 안함."""
+    import logging
+    cache_key = (day_pillar, gender, year_pillar, month_pillar, hour_pillar)
+    if cache_key in _saju_full_cache:
+        logging.info(f"[SajuAI] 캐시 히트: {cache_key[0]}/{cache_key[1]}")
+        return _saju_full_cache[cache_key]
+
     gender_str = "남성" if gender == "male" else "여성"
     hour_str = f"시주: {hour_pillar}" if hour_pillar else "시주: 미입력"
     prompt = f"""다음 사주팔자를 가진 {gender_str}을 명리학으로 해석해주세요.
@@ -103,15 +161,21 @@ def _interpret_saju_full_cached(day_pillar: str, gender: str, year_pillar: str,
 
 JSON 형식으로만 답변:
 {{
-  "core_nature": "일주 {day_pillar}만의 독특한 기질 (3~4문장, 구체적으로)",
-  "strengths": ["강점1 — 구체적 상황 예시", "강점2", "강점3"],
-  "growth_areas": ["성장과제1 — 긍정 관점", "성장과제2"],
-  "element_balance": "오행 균형 분석 (2~3문장)",
-  "relationship_style": "인간관계 패턴 (2~3문장)",
-  "career_direction": "적성/진로 방향 (2~3문장)",
-  "year_2026": "2026년 흐름과 필요한 에너지 (2문장)"
+  "core_nature": "일주 {day_pillar} 기질 (2문장 이내)",
+  "strengths": ["강점1", "강점2", "강점3"],
+  "growth_areas": ["성장과제1", "성장과제2"],
+  "element_balance": "오행 균형 (1~2문장)",
+  "relationship_style": "인간관계 패턴 (1~2문장)",
+  "career_direction": "적성/진로 (1~2문장)",
+  "year_2026": "2026년 흐름 (1문장)"
 }}"""
-    return _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1500)
+    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1200)
+    if raw:
+        _saju_full_cache[cache_key] = raw
+        if len(_saju_full_cache) > 60:
+            oldest = next(iter(_saju_full_cache))
+            del _saju_full_cache[oldest]
+    return raw
 
 
 def interpret_saju_full(pillars: dict, gender: str = "male") -> dict:
@@ -126,7 +190,7 @@ def interpret_saju_full(pillars: dict, gender: str = "male") -> dict:
     hour_p = pillars.get("hour")
 
     day_pillar = day_p.get("pillar", "")
-    primary_el = ELEMENTS_KR.get(pillars.get("primary_element", ""), pillars.get("primary_element", ""))
+    primary_el = ELEMENTS_KR.get(pillars.get("primary_element", ""), pillars.get("primary_element", "")) or ""
     hour_pillar = hour_p.get("pillar", "") if hour_p else ""
 
     # 캐시 조회 (60갑자 기준 최대 60개 항목 메모리 캐시)

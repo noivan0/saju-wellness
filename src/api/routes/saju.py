@@ -1242,13 +1242,21 @@ def get_fortune_standard(
 # ── AI 상세 해석 전용 엔드포인트 (calculate와 분리하여 응답시간 독립) ──────────
 @router.post("/ai-interpret")
 @limiter.limit("5/minute")
-def ai_interpret(request: Request, body: BirthInfo):
+async def ai_interpret(request: Request, body: BirthInfo):
     """
     AI 사주 상세 해석 — calculate 이후 별도 호출.
     응답 시간: 15~40초 (Claude API 의존)
+    asyncio.to_thread로 동기 블로킹 방지
     """
+    import asyncio
     if not _AI_OK:
-        return {"ai": {}, "note": "AI 해석 서비스 비활성화"}
+        return {"ai": {}, "note": "interpret_saju_full" and "AI 해석 서비스 비활성화"}
+
+    from src.services.ai_interpreter import (  # type: ignore[reportPossiblyUnbound]
+        _get_async_client, _saju_full_cache, _interpret_saju_full_cached,
+        _extract_json, SAJU_SYSTEM, ELEMENTS_KR,
+    )
+    import asyncio
 
     if not _ENGINE_OK:
         raise HTTPException(status_code=500, detail="사주 엔진 로드 실패")
@@ -1264,17 +1272,77 @@ def ai_interpret(request: Request, body: BirthInfo):
         raise HTTPException(status_code=400, detail="사주 계산 오류")
 
     pillars = _saju_engine_to_legacy(result, body.birth_hour)
+    gender = body.gender or "male"
 
-    try:
-        ai_data = interpret_saju_full(pillars, gender=body.gender or "male")
-    except Exception as e:
-        import logging as _log
-        _log.warning(f"[SajuAI] ai-interpret 오류: {e}")
-        ai_data = {}
+    # 캐시 우선 확인
+    year_p = pillars.get("year", {})
+    month_p = pillars.get("month", {})
+    day_p = pillars.get("day", {})
+    hour_p = pillars.get("hour")
+    day_pillar = day_p.get("pillar", "")
+    hour_pillar = hour_p.get("pillar", "") if hour_p else ""
+    cache_key = (day_pillar, gender, year_p.get("pillar",""), month_p.get("pillar",""), hour_pillar)
+
+    if cache_key in _saju_full_cache:
+        raw = _saju_full_cache[cache_key]
+        ai_data = _extract_json(raw)
+        return {
+            "ai": ai_data,
+            "day_pillar": day_pillar,
+            "disclaimer": "AI 해석은 명리학적 참고 정보입니다.",
+        }
+
+    # async client로 직접 호출
+    async_client = _get_async_client()
+    ai_data = {}
+    if async_client:
+        primary_el = ELEMENTS_KR.get(pillars.get("primary_element",""), pillars.get("primary_element","")) or ""
+        gender_str = "남성" if gender == "male" else "여성"
+        hour_str = f"시주: {hour_pillar}" if hour_pillar else "시주: 미입력"
+        prompt = f"""다음 사주팔자를 가진 {gender_str}을 명리학으로 해석해주세요.
+
+【사주】
+- 년주: {year_p.get('pillar','')} ({year_p.get('element','')})
+- 월주: {month_p.get('pillar','')} ({month_p.get('element','')})
+- 일주: {day_pillar} ({day_p.get('element','')}) ← 핵심
+- {hour_str}
+- 주 오행: {primary_el}
+
+JSON 형식으로만 답변:
+{{
+  "core_nature": "일주 {day_pillar} 기질 (2문장 이내)",
+  "strengths": ["강점1", "강점2", "강점3"],
+  "growth_areas": ["성장과제1", "성장과제2"],
+  "element_balance": "오행 균형 (1~2문장)",
+  "relationship_style": "인간관계 패턴 (1~2문장)",
+  "career_direction": "적성/진로 (1~2문장)",
+  "year_2026": "2026년 흐름 (1문장)"
+}}"""
+        try:
+            resp = await async_client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=1200,
+                timeout=45.0,
+                system=SAJU_SYSTEM,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            raw = resp.content[0].text if resp.content else ""
+            import logging
+            logging.warning(f"[SajuAI] async 응답 {len(raw)}자, stop={resp.stop_reason}")
+            print(f"[SajuAI] async 응답 {len(raw)}자, stop={resp.stop_reason}", flush=True)
+            if raw:
+                _saju_full_cache[cache_key] = raw
+                if len(_saju_full_cache) > 60:
+                    del _saju_full_cache[next(iter(_saju_full_cache))]
+            ai_data = _extract_json(raw)
+        except Exception as e:
+            import logging
+            logging.warning(f"[SajuAI] async 오류: {type(e).__name__}: {e}")
+            print(f"[SajuAI] async 오류: {type(e).__name__}: {e}", flush=True)
 
     return {
         "ai": ai_data,
-        "day_pillar": pillars.get("day", {}).get("pillar", ""),
+        "day_pillar": day_pillar,
         "disclaimer": "AI 해석은 명리학적 참고 정보입니다.",
     }
 
