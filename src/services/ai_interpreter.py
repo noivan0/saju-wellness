@@ -3,10 +3,32 @@
 Claude API를 활용해 사주팔자, 에너지, 궁합을 깊이 있게 해석
 """
 import os
+import json
 import anthropic
 from functools import lru_cache
 
 _client = None
+
+
+def _extract_json(raw: str) -> dict:
+    """AI 응답에서 JSON 추출 — 코드블록·이스케이프 문자 내성 있는 파서"""
+    if not raw:
+        return {}
+    # 1) 마크다운 코드블록 제거
+    import re
+    raw = re.sub(r'```(?:json)?\s*', '', raw).strip()
+    raw = re.sub(r'```\s*$', '', raw).strip()
+    # 2) json.JSONDecoder.raw_decode 로 첫 JSON 객체 추출
+    decoder = json.JSONDecoder()
+    start = raw.find('{')
+    if start == -1:
+        return {}
+    try:
+        obj, _ = decoder.raw_decode(raw, start)
+        return obj if isinstance(obj, dict) else {}
+    except json.JSONDecodeError:
+        return {}
+
 
 def _get_client():
     global _client
@@ -57,10 +79,9 @@ def _call_ai(prompt: str, system: str = None, max_tokens: int = 800) -> str:
 
 
 SAJU_SYSTEM = (
-    "당신은 30년 경력의 명리학 전문가입니다. "
-    "사주팔자를 깊이 있고 개인화된 방식으로 해석합니다. "
-    "딱딱한 나열보다 자연스러운 문체로, 실생활에 도움이 되는 구체적 조언을 제공합니다. "
-    "의학적/심리상담 대체 표현 금지. 문화·오락 서비스임을 인식하고 긍정적 관점 유지."
+    "당신은 명리학 전문가입니다. "
+    "반드시 순수 JSON만 반환하세요. 마크다운, 코드블록(```), 설명 텍스트, 헤더 절대 금지. "
+    "첫 글자는 반드시 { 이어야 합니다."
 )
 
 
@@ -102,28 +123,10 @@ JSON 형식으로만 답변:
   "year_2026": "2026년 흐름과 필요한 에너지 (2문장)"
 }}"""
 
-    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1200)
+    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1500)
     if not raw:
         return {}
-    
-    import json, re
-    # JSON 추출
-    start = raw.find("{")
-    if start == -1:
-        return {}
-    depth = 0
-    end = start
-    for i, c in enumerate(raw[start:], start):
-        if c == "{": depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-    try:
-        return json.loads(raw[start:end])
-    except Exception:
-        return {}
+    return _extract_json(raw)
 
 
 def interpret_energy_today(pillars: dict, today_pillar: dict) -> dict:
@@ -163,20 +166,7 @@ JSON 형식으로만:
     if not raw:
         return {}
     
-    import json
-    start = raw.find("{")
-    if start == -1:
-        return {}
-    depth = 0; end = start
-    for i, c in enumerate(raw[start:], start):
-        if c == "{": depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0: end = i + 1; break
-    try:
-        return json.loads(raw[start:end])
-    except Exception:
-        return {}
+    return _extract_json(raw)
 
 
 def interpret_compatibility(pillars_a: dict, pillars_b: dict, score: int, relation: str) -> dict:
@@ -223,20 +213,7 @@ JSON 형식으로만:
     if not raw:
         return {}
     
-    import json
-    start = raw.find("{")
-    if start == -1:
-        return {}
-    depth = 0; end = start
-    for i, c in enumerate(raw[start:], start):
-        if c == "{": depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0: end = i + 1; break
-    try:
-        return json.loads(raw[start:end])
-    except Exception:
-        return {}
+    return _extract_json(raw)
 
 
 def interpret_compatibility_api(pillars_a: dict, pillars_b: dict, score: int, relation: str) -> dict:

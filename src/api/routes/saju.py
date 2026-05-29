@@ -347,14 +347,7 @@ def calculate_saju(request: Request, body: BirthInfo):
     primary_element = pillars.get("primary_element", "")
     element_interp = element_data.get(primary_element, {})
 
-    # AI 상세 해석 (실패해도 기본 응답 반환)
-    ai_interpretation = {}
-    if _AI_OK:
-        try:
-            ai_interpretation = interpret_saju_full(pillars, gender=body.gender or "male")
-        except Exception:
-            pass
-
+    # AI 해석은 /api/saju/ai-interpret 별도 엔드포인트에서 제공 (응답시간 분리)
     return {
         "pillars": pillars,
         "disclaimer": pillars.get("disclaimer"),
@@ -370,7 +363,7 @@ def calculate_saju(request: Request, body: BirthInfo):
                 "career": element_interp.get("career", ""),
                 "relationship": element_interp.get("relationship", ""),
             },
-            "ai": ai_interpretation,  # AI 생성 상세 해석
+            "ai": {},  # AI 해석은 POST /api/saju/ai-interpret 별도 호출
         },
         "engine_method": result.get("method", "unknown"),
     }
@@ -1203,3 +1196,64 @@ def get_fortune_standard(
         "prompt_used": prompt.get("system", "")[:100] + "..." if prompt else "",
         "legal": "명리학 참고 정보 — 의료/심리상담 대체 아님",
     }
+
+
+# ── AI 상세 해석 전용 엔드포인트 (calculate와 분리하여 응답시간 독립) ──────────
+@router.post("/ai-interpret")
+@limiter.limit("5/minute")
+def ai_interpret(request: Request, body: BirthInfo):
+    """
+    AI 사주 상세 해석 — calculate 이후 별도 호출.
+    응답 시간: 15~40초 (Claude API 의존)
+    """
+    if not _AI_OK:
+        return {"ai": {}, "note": "AI 해석 서비스 비활성화"}
+
+    if not _ENGINE_OK:
+        raise HTTPException(status_code=500, detail="사주 엔진 로드 실패")
+
+    try:
+        result = get_saju(body.birth_year, body.birth_month, body.birth_day, hour=body.birth_hour)
+        try:
+            from src.engine.saju_calculator import get_lunar_date
+            result["lunar_date"] = get_lunar_date(body.birth_year, body.birth_month, body.birth_day)
+        except Exception:
+            result["lunar_date"] = None
+    except Exception:
+        raise HTTPException(status_code=400, detail="사주 계산 오류")
+
+    pillars = _saju_engine_to_legacy(result, body.birth_hour)
+
+    try:
+        ai_data = interpret_saju_full(pillars, gender=body.gender or "male")
+    except Exception as e:
+        import logging as _log
+        _log.warning(f"[SajuAI] ai-interpret 오류: {e}")
+        ai_data = {}
+
+    return {
+        "ai": ai_data,
+        "day_pillar": pillars.get("day", {}).get("pillar", ""),
+        "disclaimer": "AI 해석은 명리학적 참고 정보입니다.",
+    }
+
+
+@router.post("/ai-energy")
+@limiter.limit("5/minute")
+def ai_energy_interpret(request: Request, body: BirthInfo):
+    """AI 오늘 에너지 상세 해석 전용"""
+    if not _AI_OK:
+        return {"ai": {}, "note": "AI 해석 서비스 비활성화"}
+    if not _ENGINE_OK:
+        raise HTTPException(status_code=500, detail="사주 엔진 로드 실패")
+    try:
+        result = get_saju(body.birth_year, body.birth_month, body.birth_day)
+    except Exception:
+        raise HTTPException(status_code=400, detail="사주 계산 오류")
+    pillars = _saju_engine_to_legacy(result)
+    today_pillar = _calc_today_pillar()
+    try:
+        ai_data = interpret_energy_today(pillars, today_pillar)
+    except Exception:
+        ai_data = {}
+    return {"ai": ai_data}

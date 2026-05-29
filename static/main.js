@@ -488,10 +488,35 @@ function renderSaju(data) {
   document.getElementById('disclaimer-text').textContent = data.disclaimer || pillars.disclaimer || '';
   document.getElementById('saju-result').style.display = 'block';
 
-  // ─── 일주 해석 섹션 ───
+  // ─── 일주 해석 섹션 (기본) ───
   renderInterpretation(pillars, data.interpretation);
 
   showToast('✨ 사주를 확인했습니다');
+
+  // ─── AI 상세 해석 (별도 요청, 비동기) ───
+  const aiContainer = document.getElementById('ai-interpretation');
+  if (aiContainer) {
+    aiContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);font-size:.85rem">🤖 AI 상세 해석 생성 중...</div>';
+    const body2 = { birth_year: +document.getElementById('birth-year').value,
+                    birth_month: +document.getElementById('birth-month').value,
+                    birth_day: +document.getElementById('birth-day').value,
+                    gender: document.getElementById('gender').value, lang: 'ko' };
+    const hourV = document.getElementById('birth-hour').value;
+    if (hourV !== '') body2.birth_hour = +hourV;
+
+    fetch(API + '/api/saju/ai-interpret', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body2), signal: AbortSignal.timeout(60000)
+    }).then(r => r.json()).then(aiData => {
+      if (aiData && aiData.ai && Object.keys(aiData.ai).length > 0) {
+        renderAiInterpretation(aiData.ai, document.getElementById('birth-year').value + '년 ' + document.getElementById('birth-month').value + '월 ' + document.getElementById('birth-day').value + '일');
+      } else {
+        aiContainer.innerHTML = '';
+      }
+    }).catch(() => {
+      aiContainer.innerHTML = '';
+    });
+  }
 }
 
 function renderInterpretation(pillars, interpretation) {
