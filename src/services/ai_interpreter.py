@@ -85,30 +85,19 @@ SAJU_SYSTEM = (
 )
 
 
-def interpret_saju_full(pillars: dict, gender: str = "male") -> dict:
-    """
-    사주팔자 전체 상세 해석 (AI 생성)
-    pillars: {year, month, day, hour, primary_element, ...}
-    """
-    year_p = pillars.get("year", {})
-    month_p = pillars.get("month", {})
-    day_p = pillars.get("day", {})
-    hour_p = pillars.get("hour")
-    
+@lru_cache(maxsize=60)
+def _interpret_saju_full_cached(day_pillar: str, gender: str, year_pillar: str,
+                                 month_pillar: str, year_el: str, month_el: str,
+                                 day_el: str, hour_pillar: str, primary_el: str) -> str:
+    """캐시 적용된 AI 사주 해석 — 동일 일주+성별 반복 요청 시 캐시 반환."""
     gender_str = "남성" if gender == "male" else "여성"
-    day_pillar = day_p.get("pillar", "")
-    day_stem = day_p.get("stem", "")
-    day_branch = day_p.get("branch", "")
-    primary_el = ELEMENTS_KR.get(pillars.get("primary_element", ""), pillars.get("primary_element", ""))
-    
-    hour_str = f"시주: {hour_p.get('pillar','')}" if hour_p else "시주: 미입력"
-
+    hour_str = f"시주: {hour_pillar}" if hour_pillar else "시주: 미입력"
     prompt = f"""다음 사주팔자를 가진 {gender_str}을 명리학으로 해석해주세요.
 
 【사주】
-- 년주: {year_p.get('pillar','')} ({year_p.get('element','')})
-- 월주: {month_p.get('pillar','')} ({month_p.get('element','')})  
-- 일주: {day_p.get('pillar','')} ({day_p.get('element','')}) ← 핵심
+- 년주: {year_pillar} ({year_el})
+- 월주: {month_pillar} ({month_el})  
+- 일주: {day_pillar} ({day_el}) ← 핵심
 - {hour_str}
 - 주 오행: {primary_el}
 
@@ -122,8 +111,36 @@ JSON 형식으로만 답변:
   "career_direction": "적성/진로 방향 (2~3문장)",
   "year_2026": "2026년 흐름과 필요한 에너지 (2문장)"
 }}"""
+    return _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1500)
 
-    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1500)
+
+def interpret_saju_full(pillars: dict, gender: str = "male") -> dict:
+    """
+    사주팔자 전체 상세 해석 (AI 생성)
+    pillars: {year, month, day, hour, primary_element, ...}
+    캐시 키: day_pillar + gender (최대 60개, 60갑자 기준)
+    """
+    year_p = pillars.get("year", {})
+    month_p = pillars.get("month", {})
+    day_p = pillars.get("day", {})
+    hour_p = pillars.get("hour")
+
+    day_pillar = day_p.get("pillar", "")
+    primary_el = ELEMENTS_KR.get(pillars.get("primary_element", ""), pillars.get("primary_element", ""))
+    hour_pillar = hour_p.get("pillar", "") if hour_p else ""
+
+    # 캐시 조회 (60갑자 기준 최대 60개 항목 메모리 캐시)
+    raw = _interpret_saju_full_cached(
+        day_pillar=day_pillar,
+        gender=gender,
+        year_pillar=year_p.get("pillar", ""),
+        month_pillar=month_p.get("pillar", ""),
+        year_el=year_p.get("element", ""),
+        month_el=month_p.get("element", ""),
+        day_el=day_p.get("element", ""),
+        hour_pillar=hour_pillar,
+        primary_el=primary_el,
+    )
     if not raw:
         return {}
     return _extract_json(raw)

@@ -208,6 +208,7 @@ class BirthInfo(BaseModel):
     birth_hour: Optional[int] = Field(None, ge=0, le=23, description="출생 시 (0~23, 선택)")
     gender: Optional[str] = None
     lang: str = Field("ko", pattern="^(ko|ja|en)$", description="언어 코드 (ko|ja|en)")  # [BLK-JWT-LANG] 허용값 강제
+    session_id: Optional[str] = Field(None, max_length=64, description="클라이언트 세션 UUID (localStorage)")  # 히스토리 저장용
 
     @model_validator(mode="after")
     def validate_date(self) -> "BirthInfo":
@@ -308,6 +309,41 @@ def get_compatibility_preview(
     }
 
 
+# ─────────────────────────────────────────────
+# DB 저장 헬퍼 (saju_readings)
+# ─────────────────────────────────────────────
+def _save_saju_reading(body: "BirthInfo", pillars: dict, day_pillar: str) -> None:
+    """사주 계산 결과를 PostgreSQL에 저장. 실패해도 무시."""
+    if not body.session_id:
+        return
+    try:
+        import psycopg2, json as _json
+        conn = psycopg2.connect(
+            host="localhost", dbname="caring_db", user="caring",
+            password="local_test_pw", connect_timeout=2
+        )
+        cur = conn.cursor()
+        cur.execute(
+            """INSERT INTO saju_readings
+               (session_id, birth_year, birth_month, birth_day, birth_hour,
+                gender, day_pillar, primary_element, pillars_json)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (
+                body.session_id[:64],
+                body.birth_year, body.birth_month, body.birth_day, body.birth_hour,
+                body.gender or "unknown",
+                day_pillar,
+                pillars.get("primary_element", ""),
+                _json.dumps(pillars, ensure_ascii=False),
+            )
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception:
+        pass  # 저장 실패 무시 — 주요 기능에 영향 없음
+
+
 # 공개 엔드포인트 — 인증 없이 사주 계산 가능
 @router.post("/calculate")
 @limiter.limit("10/minute")
@@ -348,7 +384,7 @@ def calculate_saju(request: Request, body: BirthInfo):
     element_interp = element_data.get(primary_element, {})
 
     # AI 해석은 /api/saju/ai-interpret 별도 엔드포인트에서 제공 (응답시간 분리)
-    return {
+    response_data = {
         "pillars": pillars,
         "disclaimer": pillars.get("disclaimer"),
         "legal": "명리학 참고 정보 — 의료/심리상담 대체 아님",
@@ -367,6 +403,11 @@ def calculate_saju(request: Request, body: BirthInfo):
         },
         "engine_method": result.get("method", "unknown"),
     }
+
+    # DB 저장 (세션 ID 있을 때만, 실패해도 무시)
+    _save_saju_reading(body, pillars, day_pillar_han)
+
+    return response_data
 
 
 # 공개 엔드포인트 — 비로그인 체험용
@@ -1257,3 +1298,56 @@ def ai_energy_interpret(request: Request, body: BirthInfo):
     except Exception:
         ai_data = {}
     return {"ai": ai_data}
+
+
+# ── 사주 히스토리 엔드포인트 ──────────────────────────────────────────────────────
+@router.get("/history")
+@limiter.limit("30/minute")
+def get_saju_history(
+    request: Request,
+    session_id: str = Query(..., max_length=64, description="클라이언트 세션 UUID"),
+):
+    """
+    특정 세션의 사주 조회 히스토리 반환 (최근 5개)
+    session_id: localStorage에 저장된 UUID
+    """
+    try:
+        import psycopg2
+        conn = psycopg2.connect(
+            host="localhost", dbname="caring_db", user="caring",
+            password="local_test_pw", connect_timeout=2
+        )
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT id, birth_year, birth_month, birth_day, birth_hour,
+                      gender, day_pillar, primary_element, created_at
+               FROM saju_readings
+               WHERE session_id = %s
+               ORDER BY created_at DESC
+               LIMIT 5""",
+            (session_id[:64],)
+        )
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        history = []
+        for row in rows:
+            history.append({
+                "id": row[0],
+                "birth_year": row[1],
+                "birth_month": row[2],
+                "birth_day": row[3],
+                "birth_hour": row[4],
+                "gender": row[5],
+                "day_pillar": row[6],
+                "primary_element": row[7],
+                "created_at": row[8].isoformat() if row[8] else None,
+            })
+
+        return {"session_id": session_id, "history": history, "count": len(history)}
+
+    except Exception as e:
+        import logging as _log
+        _log.warning(f"[SajuHistory] DB 조회 실패: {e}")
+        return {"session_id": session_id, "history": [], "count": 0}

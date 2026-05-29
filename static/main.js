@@ -368,6 +368,22 @@ function showToast(msg) {
 const ELEMENTS = { '木':'木 목','火':'火 화','土':'土 토','金':'金 금','水':'水 수' };
 const EL_CLASS = { '木':'el-wood','火':'el-fire','土':'el-earth','金':'el-metal','水':'el-water' };
 
+// ─────────────────────────────────────────────────────────
+// 세션 ID 관리 (localStorage UUID — 히스토리 저장용)
+// ─────────────────────────────────────────────────────────
+function getSessionId() {
+  let sid = localStorage.getItem('saju_session_id');
+  if (!sid) {
+    // UUID v4 생성
+    sid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+    localStorage.setItem('saju_session_id', sid);
+  }
+  return sid;
+}
+
 // 사주 계산
 async function calcSaju() {
   const year = +document.getElementById('birth-year').value;
@@ -386,7 +402,7 @@ async function calcSaju() {
   document.getElementById('saju-result').style.display = 'none';
 
   try {
-    const body = { birth_year: year, birth_month: month, birth_day: day, gender, lang: 'ko' };
+    const body = { birth_year: year, birth_month: month, birth_day: day, gender, lang: 'ko', session_id: getSessionId() };
     if (hourVal !== '') body.birth_hour = +hourVal;
 
     const res = await fetch(API + '/api/saju/calculate', {
@@ -492,6 +508,9 @@ function renderSaju(data) {
   renderInterpretation(pillars, data.interpretation);
 
   showToast('✨ 사주를 확인했습니다');
+
+  // ─── 히스토리 갱신 ───
+  loadSajuHistory();
 
   // ─── AI 상세 해석 (별도 요청, 비동기) ───
   const aiContainer = document.getElementById('ai-interpretation');
@@ -1230,4 +1249,134 @@ function selectDayCell(day) {
   `;
   detail.style.display = 'block';
   detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ─────────────────────────────────────────────────────────
+// 사주 히스토리 — 최근 본 사주 (최대 5개)
+// ─────────────────────────────────────────────────────────
+async function loadSajuHistory() {
+  const container = document.getElementById('saju-history-section');
+  if (!container) return;
+
+  const sid = getSessionId();
+  try {
+    const res = await fetch(API + '/api/saju/history?session_id=' + encodeURIComponent(sid));
+    if (!res.ok) { container.style.display = 'none'; return; }
+    const data = await res.json();
+    if (!data.history || data.history.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'block';
+
+    const EL_NAMES = {'木':'木목','火':'火화','土':'土토','金':'金금','水':'水수'};
+    let html = '<div style="font-size:.78rem;font-weight:700;color:var(--text-3);letter-spacing:.06em;margin-bottom:10px">📜 최근 본 사주</div>';
+    data.history.forEach(h => {
+      const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ko-KR', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      const elName = EL_NAMES[h.primary_element] || h.primary_element || '';
+      html += `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:background .2s"
+          onclick="loadHistoryItem(${h.birth_year},${h.birth_month},${h.birth_day},${h.birth_hour||'null'},'${h.gender||'male'}')"
+          onmouseover="this.style.background='rgba(201,162,39,.1)'"
+          onmouseout="this.style.background='rgba(255,255,255,.04)'">
+          <div style="font-size:1.1rem;font-family:'Noto Serif KR',serif;color:var(--gold);min-width:32px;text-align:center">${h.day_pillar||'?'}</div>
+          <div style="flex:1">
+            <div style="font-size:.85rem;color:var(--text)">${h.birth_year}년 ${h.birth_month}월 ${h.birth_day}일${h.birth_hour!=null?' '+h.birth_hour+'시':''}</div>
+            <div style="font-size:.72rem;color:var(--text-3)">${elName} ${dateStr}</div>
+          </div>
+          <div style="font-size:.75rem;color:var(--text-3)">▶</div>
+        </div>`;
+    });
+    container.innerHTML = html;
+  } catch(e) {
+    container.style.display = 'none';
+  }
+}
+
+function loadHistoryItem(year, month, day, hour, gender) {
+  // 폼 값 채우기
+  const yEl = document.getElementById('birth-year');
+  const mEl = document.getElementById('birth-month');
+  const dEl = document.getElementById('birth-day');
+  const hEl = document.getElementById('birth-hour');
+  const gEl = document.getElementById('gender');
+  if (yEl) yEl.value = year;
+  if (mEl) mEl.value = month;
+  if (dEl) dEl.value = day;
+  if (hEl) hEl.value = (hour != null && hour !== 'null') ? hour : '';
+  if (gEl) gEl.value = gender || 'male';
+  // 자동 계산 실행
+  document.getElementById('btn-calc-saju').click();
+  // 나의 사주 탭으로 이동
+  const sajuTab = document.querySelector('.tab[onclick*="saju"]');
+  if (sajuTab) sajuTab.click();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+// ── AI 상세 해석 렌더링 (비동기 응답용) ──────────────────────
+function renderAiInterpretation(ai, dateLabel) {
+  const container = document.getElementById('ai-interpretation');
+  if (!container || !ai || !Object.keys(ai).length) {
+    if (container) container.innerHTML = '';
+    return;
+  }
+  let html = `<div style="margin-top:16px">
+    <div style="font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:12px">✦ AI 명리학 상세 분석</div>`;
+
+  if (ai.core_nature) {
+    html += `<div style="background:rgba(201,162,39,.06);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:14px;margin-bottom:10px">
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">핵심 기질</div>
+      <p style="color:var(--text);line-height:1.75;font-size:.9rem">${ai.core_nature}</p>
+    </div>`;
+  }
+
+  if (ai.strengths && ai.strengths.length) {
+    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:8px">타고난 강점</div>
+      ${ai.strengths.map(s => `<div style="display:flex;gap:8px;margin-bottom:6px">
+        <span style="color:var(--gold);flex-shrink:0">✦</span>
+        <span style="color:var(--text);font-size:.87rem;line-height:1.6">${s}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  if (ai.element_balance) {
+    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">오행 균형 분석</div>
+      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.element_balance}</p>
+    </div>`;
+  }
+
+  if (ai.relationship_style) {
+    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">인간관계 스타일</div>
+      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.relationship_style}</p>
+    </div>`;
+  }
+
+  if (ai.career_direction) {
+    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">적성과 진로</div>
+      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.career_direction}</p>
+    </div>`;
+  }
+
+  if (ai.growth_areas && ai.growth_areas.length) {
+    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:8px">성장 과제</div>
+      ${ai.growth_areas.map(g => `<div style="display:flex;gap:8px;margin-bottom:6px">
+        <span style="color:var(--gold);flex-shrink:0">◇</span>
+        <p style="color:var(--text-2);line-height:1.6;font-size:.85rem;margin:0">${g}</p>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  if (ai.year_2026) {
+    html += `<div style="background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.3);border-radius:10px;padding:14px">
+      <div style="font-size:.72rem;color:var(--gold);font-weight:600;margin-bottom:6px">📅 2026년 흐름</div>
+      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.year_2026}</p>
+    </div>`;
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
 }

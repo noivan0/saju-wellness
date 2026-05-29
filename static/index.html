@@ -291,6 +291,10 @@ select option { background: #1a2e45; color: #fff; }
 
       <div class="card disclaimer" id="disclaimer-text"></div>
     </div>
+
+    <!-- 최근 본 사주 히스토리 -->
+    <div id="saju-history-section" class="card" style="display:none;margin-top:12px">
+    </div>
   </div>
 
   <!-- ===== 오늘의 에너지 탭 ===== -->
@@ -505,5 +509,14 @@ select option { background: #1a2e45; color: #fff; }
 </div>
 
 <script src="/static/main.js"></script>
+<script>
+// 페이지 로드 시 히스토리 표시
+document.addEventListener('DOMContentLoaded', function() {
+  // 세션 ID 초기화 (최초 방문 시 UUID 생성)
+  getSessionId();
+  // 기존 히스토리 로드 (탭 기본값: 나의 사주)
+  loadSajuHistory();
+});
+</script>
 </body>
 </html>
