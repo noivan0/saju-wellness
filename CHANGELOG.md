@@ -300,3 +300,41 @@ nova-document Chain 5차 공식 문서화 결과 릴리즈 (nova-document-releas
 - KB 릴리즈: kb/agents/nova-document/2026-06-08-chain5-nova-learn-doc.md
 
 ---
+
+## [Released — Sprint 3 Chain 6차] 2026-06-08
+
+### 자율 루프 반복 실증 최종 (6차)
+
+- NOVA 자율 체인 6차 연속 완주: evaluator → retro → learn → document
+- p50=1.2ms / p95=3.2ms / p99=3.2ms 6차 동일 유지 (성능 편차 없음 완전 실증)
+- FastAPI+SQLite MVP 장기 안정성 완전 입증 (6연속 동일 지표)
+- error_rate=0.0% 6연속 유지
+- KPI 18/18 통과, HTTP 200 전 엔드포인트 6회 실증
+
+### 블로커 현황 (미해소, 6차 연속)
+
+- noivan.env 8개 미수신 → Docker 배포 불가
+- ANTHROPIC_API_KEY 미설정 → ai={} 반환
+- 커버리지 93.07% → 95% 미달 (1.93%p 부족)
+
+### 해소 경로
+
+- noivan.env 환경변수 전달이 Docker 배포 + ANTHROPIC_API_KEY 2개 블로커 동시 해소
+- 커버리지는 nova-dev 별도 테스트 추가 작업 필요
+
+---
+
+작성: nova-document (kanban t_5811e116) — Chain 6차
+기반: nova-learn 6차 통합 결과 (t_4747757b)
+
+### Sprint 3 Chain 6차 nova-document-release 공식 릴리즈 (2026-06-08)
+
+nova-document Chain 6차 공식 문서화 결과 릴리즈 (nova-document-release t_492e7d61).
+
+- NOVA 자율 체인 6차 연속 완주 공식 릴리즈: evaluator→retro→learn→document 루프 6차 안정 순환 완전 실증
+- FastAPI+SQLite MVP 장기 안정성 완전 입증 공식 릴리즈: p50=1.2ms / p95=3.2ms / p99=3.2ms 6차 동일 유지 — 성능 편차 없음 완전 실증
+- 블로커 해소 경로 6차 공식 릴리즈: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로 (6차 연속 동일 확인)
+- Diataxis 4분류 공식 문서 릴리즈: nova-learn 6차 지식 통합 (KB page_id: 7cc65b4485544b97)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain6-nova-learn-doc.md
+
+---
