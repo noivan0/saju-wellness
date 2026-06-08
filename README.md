@@ -49,6 +49,7 @@ ANTHROPIC_API_KEY=your_claude_api_key
 ANTHROPIC_BASE_URL=https://api.anthropic.com  # 또는 사내 게이트웨이
 
 # 선택
+REDIS_URL=redis://localhost:6379  # JWT 블랙리스트 멀티워커 공유 (없으면 메모리 폴백)
 KASI_API_KEY=    # 음력 변환 API 폴백용
 ALLOWED_ORIGINS=http://localhost:3000
 ```
@@ -69,15 +70,22 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 8002
 
 ## 주요 API
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| POST | `/api/saju/calculate` | 사주팔자 계산 + AI 해석 |
-| POST | `/api/saju/daily-energy` | 오늘의 에너지 |
-| POST | `/api/saju/compatibility` | 궁합 분석 |
-| GET | `/api/saju/fortune-calendar` | 월별 운세달력 |
-| GET | `/api/saju/fortune-calendar/daily` | 일별 운세달력 |
-| GET | `/api/saju/pillar-details` | 일주 상세 해석 |
-| GET | `/health` | 헬스체크 |
+| 메서드 | 경로 | 설명 | 인증 |
+|--------|------|------|------|
+| POST | `/api/saju/calculate` | 사주팔자 계산 + AI 해석 | 공개 |
+| POST | `/api/saju/daily-energy` | 오늘의 에너지 | 공개 |
+| POST | `/api/saju/compatibility` | 궁합 분석 | 공개 |
+| GET | `/api/saju/fortune-calendar` | 월별 운세달력 | 공개 |
+| GET | `/api/saju/fortune-calendar/daily` | 일별 운세달력 | 공개 |
+| GET | `/api/saju/pillar-details` | 일주 상세 해석 | 공개 |
+| GET | `/api/insight/daily` | 일간 AI 인사이트 (rate-limit 10/min) | 공개 |
+| GET | `/api/insight/session` | 세션 AI 인사이트 (유료) | JWT 필요 |
+| POST | `/api/auth/register` | 회원가입 | 공개 |
+| POST | `/api/auth/login` | 로그인 → JWT 발급 | 공개 |
+| POST | `/api/auth/logout` | 로그아웃 + JWT 블랙리스트 | JWT 필요 |
+| POST | `/api/auth/refresh` | 토큰 갱신 | JWT 필요 |
+| POST | `/api/ivr/` | IVR 음성전화 (Twilio) | Twilio 서명 |
+| GET | `/health` | 헬스체크 | 공개 |
 
 ### 사주 계산 예시
 
@@ -129,43 +137,34 @@ docker run -p 8002:8002 --env-file .env saju-wellness
 
 ---
 
-## 추가로 구현 필요한 부분
+## 보안 현황 (v1.1.0 — Sprint1 완료)
 
-### 🔴 필수
+### 구현 완료
 
-1. **ANTHROPIC_API_KEY 설정**
-   - 없으면 AI 상세 해석이 비어있음 (기본 해석만 제공)
-   - `interpretation.ai` 필드가 `{}` 로 반환됨
-   - Claude API 키: https://console.anthropic.com/
+| ID | 심각도 | 상태 | 설명 |
+|----|--------|------|------|
+| HIGH-1 | HIGH | ✅ FIXED | AI_SEMAPHORE Python 3.12 RuntimeError — lazy-init 패턴 적용 |
+| HIGH-2 | HIGH | ✅ FIXED | /api/insight/daily 율 제한 미적용 — slowapi 10/min 구현 |
+| HIGH-3 | HIGH | ⚠️ PARTIAL | JWT Redis 블랙리스트 — Redis 없으면 메모리 폴백 (REDIS_URL 필요) |
+| CVE-2024-33664 | HIGH | ✅ FIXED | python-jose → PyJWT 2.9.0 교체 (alg:none 공격 차단) |
+| CVE-2024-0232 | HIGH | ✅ FIXED | bcrypt 72바이트 명시 절단 |
+| MEDIUM-1 | MEDIUM | ✅ FIXED | API 키 환경변수 관리 |
+| MEDIUM-2 | MEDIUM | 🔲 OPEN | 기분 데이터 별도 동의 항목 (온보딩 UI 미구현) |
 
-2. **회원 인증 시스템**
-   - 현재: 비로그인 체험용 (rate limit 10회/분)
-   - 필요: JWT 로그인 → 개인 사주 저장/조회 기능
+### OWASP HTTP 보안 헤더 (v1.1.0 적용)
 
-3. **사주 저장 기능**
-   - 현재: DB 없이 계산만 반환
-   - 필요: PostgreSQL로 사주 기록 저장, 연도별 운세 히스토리
-
-### 🟡 권장
-
-4. **AI 해석 캐싱**
-   - 동일한 사주는 Redis 캐시 활용 (응답 속도 개선)
-
-5. **궁합 고도화**
-   - 현재: 일간 오행 1:1 비교
-   - 필요: 연지, 월주, 시주까지 포함한 종합 궁합
-
-6. **다국어 완성**
-   - 현재: ko/ja/en 구조 있음
-   - 일본어 해석 데이터 추가 필요
-
-7. **모바일 앱 버전**
-   - 현재: 모바일 반응형 웹
-   - 권장: React Native 또는 Flutter 앱
+- X-Frame-Options: DENY (클릭재킹 방지)
+- X-Content-Type-Options: nosniff (MIME 스니핑 방지)
+- X-XSS-Protection: 1; mode=block
+- Content-Security-Policy: Anthropic API만 외부 연결 허용
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: camera/microphone/geolocation 차단
 
 ---
 
-## 프로덕션 체크리스트
+## Sprint 체크리스트
+
+### Sprint1 완료 항목 ✅
 
 ```
 [x] FastAPI 서버
@@ -175,18 +174,40 @@ docker run -p 8002:8002 --env-file .env saju-wellness
 [x] 운세달력 (월별 + 일별)
 [x] 궁합 분석
 [x] 다크 테마 UI
-[ ] 회원 인증 & 사주 저장
+[x] JWT 인증 (PyJWT 2.9.0 — Access 1h / Refresh 30d)
+[x] JWT 블랙리스트 (Redis/메모리 폴백)
+[x] OWASP HTTP 보안 헤더 (6종)
+[x] 율 제한 (slowapi — 인사이트 10/min)
+[x] 위기 키워드 감지 (ko/ja/en — 1393 안내)
+[x] i18n 3개 언어 (ko/ja/en)
+[x] IVR 음성전화 (Twilio)
+[x] 면책 문구 자동 첨부
+```
+
+### Sprint2 이월 항목 🔲
+
+```
+[ ] AI_SEMAPHORE 멀티워커 부하 테스트 (Locust workers=4)
+[ ] JWT Redis 블랙리스트 멀티워커 실증 (REDIS_URL 설정)
+[ ] /api/insight/daily 율 제한 인증/비인증 분리 (인증: 30/min)
+[ ] 실서버 배포 (noivan.env + Docker 환경)
+[ ] 테스트 커버리지 89% → 95%
+[ ] 사주 저장 기능 (PostgreSQL)
 [ ] AI 해석 캐싱 (Redis)
 [ ] HTTPS/SSL
-[ ] 궁합 고도화
+[ ] 궁합 고도화 (연지/월주/시주 포함)
+[ ] 기분 데이터 별도 동의 UI (온보딩)
 ```
 
 ---
 
 ## 법적 고지
 
-본 서비스는 명리학적 관점의 **문화·오락 서비스**이며,  
+본 서비스는 명리학적 관점의 **문화·오락 서비스**이며,
 전문적 심리상담, 의료 행위, 점술을 대체하지 않습니다.
+
+**금지 표현**: 코치/코칭/상담/진단/치료/예측/보장 — 모든 응답에서 사용 금지
+(위반 시 심리사법 경계 위험 — HANDOFF.md 표현 금지 목록 참조)
 
 ---
 

@@ -187,6 +187,20 @@ select option { background: #1a2e45; color: #fff; }
 .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(201,162,39,.95); color: #0d1b2a; padding: 12px 24px; border-radius: 50px; font-weight: 600; font-size: 0.875rem; opacity: 0; transition: var(--transition); pointer-events: none; z-index: 200; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* AI 해석 결과 */
+.ai-result-card { padding: 4px; }
+.ai-result-card h3 { margin:0 0 16px; font-size:18px; color: var(--gold); font-family:'Noto Serif KR',serif; }
+.ai-section { margin-bottom: 14px; background:rgba(255,255,255,.04); border-radius:10px; padding:14px; }
+.ai-section h4 { margin:0 0 6px; font-size:.72rem; color:var(--text-3); }
+.ai-section p, .ai-section li { font-size:.88rem; line-height:1.7; margin:0; color:var(--text); }
+.ai-section ul { margin:0; padding-left:0; list-style:none; }
+.ai-section ul li { display:flex; gap:8px; margin-bottom:6px; }
+.ai-section ul li::before { content:'✦'; color:var(--gold); flex-shrink:0; font-size:.8rem; }
+.ai-year { background:rgba(201,162,39,.08)!important; border:1px solid rgba(201,162,39,.3); }
+.ai-year h4 { color:var(--gold)!important; font-weight:600; }
+.ai-disclaimer { font-size:.72rem; color:var(--text-3); margin-top:12px; text-align:right; }
+#ai-interpretation .loading-ai { text-align:center; padding:20px; color:var(--text-3); font-size:.85rem; }
+
 @media (min-width: 768px) {
   .container { padding: 0 24px 40px; }
   .bottom-nav { max-width: 480px; left: 50%; transform: translateX(-50%); border-radius: 20px 20px 0 0; }

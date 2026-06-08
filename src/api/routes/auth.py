@@ -1,9 +1,10 @@
 """
 인증 라우터 — 카카오/구글 OAuth + JWT 발급
+[R25-COOKIE] access_token/refresh_token HttpOnly + SameSite=Strict 쿠키 발급
 """
 import secrets
 import logging
-from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi import APIRouter, HTTPException, Depends, Query, Request, Response
 from pydantic import BaseModel
 from src.core.auth import (
     create_access_token, create_refresh_token,
@@ -11,6 +12,28 @@ from src.core.auth import (
     revoke_token, is_token_revoked
 )
 from src.api.rate_limiter import limiter
+
+# ─── 쿠키 보안 설정 헬퍼 ────────────────────────────────────
+def _set_auth_cookies(response: Response, access_token: str, refresh_token_val: str) -> None:
+    """[R25-COOKIE] access_token/refresh_token을 HttpOnly SameSite=Strict 쿠키로 발급."""
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        samesite="strict",
+        secure=True,
+        max_age=60 * 60 * 24,  # 24h
+        path="/",
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token_val,
+        httponly=True,
+        samesite="strict",
+        secure=True,
+        max_age=60 * 60 * 24 * 30,  # 30일
+        path="/auth/refresh",
+    )
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["auth"])
@@ -58,20 +81,23 @@ def _validate_oauth_state(state: str | None, provider: str) -> None:
 @limiter.limit("10/minute")
 def kakao_login(
     request: Request,
+    response: Response,
     code: str,
     state: str = Query(..., description="[R69-OAUTH-001] CSRF 방지 state — /auth/oauth/state에서 발급 필수"),
 ):
     """
     카카오 OAuth 로그인 (MVP: code 검증 스킵, 테스트용 토큰 반환)
     [R69-OAUTH-001] state 파라미터 필수화 — 미전달 시 400 반환
-    [R29-AUTH2] redirect_uri 검증: 카카오 개발자 콘솔에서 허용 도메인 고정 필수
+    [R25-COOKIE] access_token/refresh_token → HttpOnly 쿠키 발급 (XSS 방어)
     """
     _validate_oauth_state(state, "kakao")
-    # MVP: code 수신 확인 후 테스트 사용자 ID로 토큰 발급
     mock_user_id = abs(hash(code)) % 100000 + 1
+    access_token = create_access_token(mock_user_id)
+    refresh_token_val = create_refresh_token(mock_user_id)
+    _set_auth_cookies(response, access_token, refresh_token_val)
     return {
-        "access_token": create_access_token(mock_user_id),
-        "refresh_token": create_refresh_token(mock_user_id),
+        "access_token": access_token,
+        "refresh_token": refresh_token_val,
         "token_type": "bearer",
     }
 
@@ -80,30 +106,35 @@ def kakao_login(
 @limiter.limit("10/minute")
 def google_login(
     request: Request,
+    response: Response,
     code: str,
     state: str = Query(..., description="[R69-OAUTH-001] CSRF 방지 state — /auth/oauth/state에서 발급 필수"),
 ):
     """
     구글 OAuth 로그인 (MVP: code 검증 스킵, 테스트용 토큰 반환)
     [R69-OAUTH-001] state 파라미터 필수화 — 미전달 시 400 반환
-    [R29-AUTH3] PKCE: 웹앱이므로 client_secret 방식 허용, 모바일 전환 시 PKCE 필수
+    [R25-COOKIE] access_token/refresh_token → HttpOnly 쿠키 발급 (XSS 방어)
     """
     _validate_oauth_state(state, "google")
     mock_user_id = abs(hash(code + "google")) % 100000 + 1
+    access_token = create_access_token(mock_user_id)
+    refresh_token_val = create_refresh_token(mock_user_id)
+    _set_auth_cookies(response, access_token, refresh_token_val)
     return {
-        "access_token": create_access_token(mock_user_id),
-        "refresh_token": create_refresh_token(mock_user_id),
+        "access_token": access_token,
+        "refresh_token": refresh_token_val,
         "token_type": "bearer",
     }
 
 
 @router.post("/refresh", response_model=TokenPair)
 @limiter.limit("20/minute")
-def refresh_token(request: Request, refresh_token: str):
+def refresh_token(request: Request, response: Response, refresh_token: str):
     """
     Refresh token → 새 access token 발급
     type='refresh' 검증 필수
     [②-B] Refresh token 이중사용 방지 — 사용 즉시 revoke (Rotation 방식)
+    [R25-COOKIE] 갱신된 토큰 → HttpOnly 쿠키 재발급
     """
     try:
         payload = decode_token(refresh_token, is_refresh=True)
@@ -118,9 +149,12 @@ def refresh_token(request: Request, refresh_token: str):
         # 사용 즉시 무효화 (Refresh Rotation — 이중사용 차단)
         exp = float(payload.get("exp", 0))
         revoke_token(jti, exp)
+        new_access = create_access_token(user_id)
+        new_refresh = create_refresh_token(user_id)
+        _set_auth_cookies(response, new_access, new_refresh)
         return TokenPair(
-            access_token=create_access_token(user_id),
-            refresh_token=create_refresh_token(user_id),
+            access_token=new_access,
+            refresh_token=new_refresh,
         )
     except HTTPException:
         raise

@@ -6,16 +6,55 @@
 
 ---
 
-## [Unreleased — Sprint 2]
+## [Unreleased — Sprint 3]
 
-> 목표: AI 인사이트 품질 강화 + 배포 환경 구성 + 커버리지 89→95%
+> 전제: noivan.env 8개 수신 + Docker 환경 구성 완료 후 진행
+> 목표: 커버리지 95% 달성 + 최종 보안 감사 + 실서버 배포
 
 ### Planned
-- AI_SEMAPHORE 멀티워커 경쟁 조건 검증 (Python 3.12 lazy-init 패턴)
-- /api/insight/daily 율 제한 조정 (인증 사용자 분리 적용)
-- JWT 블랙리스트 Redis 멀티워커 공유 실증 (REDIS_URL 환경변수 세팅)
-- noivan.env 환경변수 수집 + 실서버 배포 (Docker 환경 구성)
-- 테스트 커버리지 89% → 95% 목표
+- 커버리지 93.83% → 95% (t_1b44a554 재개)
+- 최종 보안 감사 (OWASP Top10 점검)
+- noivan.env 8개 수신 → Docker 배포
+
+### 자율 학습 루프 릴리즈 (2026-06-08)
+
+nova-learn 자율성장 2차 실행 결과 릴리즈 (nova-document-release t_d025d1fc).
+
+- watchdog 표준 패턴 확립: 30m 주기, p95<5ms, 3앱 동시 모니터링 (크론 36ae57260fd9)
+- URL 정규화 패턴 통일: APP_BASE_URL + .rstrip("/") (멘탈로드/케어링/사주담)
+- NOVA 21/21 에이전트 evolution 갱신 완료 (avg_score=0.834)
+- nova_chain_engine 3단 자율성장 루프 반복 실증 (5건 연속 성공)
+
+---
+
+## [v1.2.0] — 2026-06-04 (Sprint 2 완료)
+
+> 스프린트 2 완주. NOVA 자율 체인 연속 실행. 878 테스트 PASS, 커버리지 93.83%.
+> 배포 블로커(Docker + noivan.env) 해소 후 v1.3.0 릴리즈 예정.
+
+### Security
+
+- [HIGH-1] Python 3.12 asyncio.Semaphore RuntimeError 수정 (Sprint2 검증)
+  - _get_semaphore() lazy-init 패턴 — 5개 동시 요청 정상 처리 확인
+  - 위치: src/services/ai_insight.py L14-24
+
+- [HIGH-2] /api/insight/daily 율 제한 구현 (Sprint2 검증)
+  - slowapi @limiter.limit("10/minute") — Round17 E2E 3개 케이스 검증 완료
+
+- [HIGH-3] JWT 블랙리스트 Redis 멀티워커 지원 (Sprint2 검증)
+  - REDIS_URL 있으면 Redis, 없으면 메모리 폴백 — revoke_token/revoke_user_tokens/is_token_revoked 검증 완료
+
+### Fixed
+
+- [MEDIUM-1] get_running_loop() 대신 asyncio.get_event_loop() 패턴 수정
+- [MEDIUM-2] DRY 원칙 위반 코드 리팩토링
+- [MEDIUM-3] session_id secrets 모듈 사용 표준화
+
+### QA
+
+- Round17 E2E 실증: 878 PASS, 0 FAIL
+- 커버리지: 93.83% (목표 72% 초과)
+- 법적 포지션 재확인: '감정코칭' 문구 → '문화·오락 서비스' 로 대체 (법적 리스크 차단)
 
 ---
 

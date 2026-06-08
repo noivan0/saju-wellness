@@ -5,7 +5,6 @@ POST /api/saju/analyze  - 사주 + AI 해석 (감정 인사이트)
 
 법적 포지션: 문화·오락 서비스 (심리상담 대체 불가)
 """
-from __future__ import annotations
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))

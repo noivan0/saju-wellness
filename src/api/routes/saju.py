@@ -319,8 +319,11 @@ def _save_saju_reading(body: "BirthInfo", pillars: dict, day_pillar: str) -> Non
     try:
         import psycopg2, json as _json
         conn = psycopg2.connect(
-            host="localhost", dbname="caring_db", user="caring",
-            password="local_test_pw", connect_timeout=2
+            host=os.getenv("DB_HOST", "localhost"),
+            dbname=os.getenv("DB_NAME", "caring_db"),
+            user=os.getenv("DB_USER", "caring"),
+            password=os.getenv("DB_PASSWORD", ""),
+            connect_timeout=2
         )
         cur = conn.cursor()
         cur.execute(
@@ -1382,8 +1385,11 @@ def get_saju_history(
     try:
         import psycopg2
         conn = psycopg2.connect(
-            host="localhost", dbname="caring_db", user="caring",
-            password="local_test_pw", connect_timeout=2
+            host=os.getenv("DB_HOST", "localhost"),
+            dbname=os.getenv("DB_NAME", "caring_db"),
+            user=os.getenv("DB_USER", "caring"),
+            password=os.getenv("DB_PASSWORD", ""),
+            connect_timeout=2
         )
         cur = conn.cursor()
         cur.execute(

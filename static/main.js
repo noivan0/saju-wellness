@@ -525,15 +525,16 @@ function renderSaju(data) {
 
     fetch(API + '/api/saju/ai-interpret', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body2), signal: AbortSignal.timeout(60000)
+      body: JSON.stringify(body2), signal: AbortSignal.timeout(90000)
     }).then(r => r.json()).then(aiData => {
       if (aiData && aiData.ai && Object.keys(aiData.ai).length > 0) {
-        renderAiInterpretation(aiData.ai, document.getElementById('birth-year').value + '년 ' + document.getElementById('birth-month').value + '월 ' + document.getElementById('birth-day').value + '일');
+        renderAiInterpretation(aiData.ai, aiContainer);
       } else {
-        aiContainer.innerHTML = '';
+        aiContainer.innerHTML = '<p style="color:var(--text-3);font-size:.85rem;text-align:center;padding:12px">AI 해석을 불러오지 못했습니다.</p>';
       }
-    }).catch(() => {
-      aiContainer.innerHTML = '';
+    }).catch((err) => {
+      const msg = (err && err.name === 'TimeoutError') ? '⏱️ AI 해석 응답 시간 초과' : 'AI 해석 서비스 일시 오류';
+      aiContainer.innerHTML = `<p style="color:var(--text-3);font-size:.85rem;text-align:center;padding:12px">${msg}</p>`;
     });
   }
 }
@@ -1313,7 +1314,7 @@ function loadHistoryItem(year, month, day, hour, gender) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 // ── AI 상세 해석 렌더링 (비동기 응답용) ──────────────────────
-function renderAiInterpretation(ai, dateLabel) {
+function renderAiInterpretation(ai, containerOrIgnored) {
   const container = document.getElementById('ai-interpretation');
   if (!container || !ai || !Object.keys(ai).length) {
     if (container) container.innerHTML = '';
@@ -1323,60 +1324,54 @@ function renderAiInterpretation(ai, dateLabel) {
     <div style="font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:12px">✦ AI 명리학 상세 분석</div>`;
 
   if (ai.core_nature) {
-    html += `<div style="background:rgba(201,162,39,.06);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:14px;margin-bottom:10px">
-      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">핵심 기질</div>
-      <p style="color:var(--text);line-height:1.75;font-size:.9rem">${ai.core_nature}</p>
+    html += `<div class="ai-section" style="border-left:3px solid var(--gold);border-radius:0 10px 10px 0;background:rgba(201,162,39,.06)">
+      <h4>핵심 기질</h4>
+      <p>${ai.core_nature}</p>
     </div>`;
   }
 
   if (ai.strengths && ai.strengths.length) {
-    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:8px">타고난 강점</div>
-      ${ai.strengths.map(s => `<div style="display:flex;gap:8px;margin-bottom:6px">
-        <span style="color:var(--gold);flex-shrink:0">✦</span>
-        <span style="color:var(--text);font-size:.87rem;line-height:1.6">${s}</span>
-      </div>`).join('')}
+    html += `<div class="ai-section">
+      <h4>타고난 강점</h4>
+      <ul>${ai.strengths.map(s => `<li>${s}</li>`).join('')}</ul>
     </div>`;
   }
 
   if (ai.element_balance) {
-    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">오행 균형 분석</div>
-      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.element_balance}</p>
+    html += `<div class="ai-section">
+      <h4>오행 균형 분석</h4>
+      <p>${ai.element_balance}</p>
     </div>`;
   }
 
   if (ai.relationship_style) {
-    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">인간관계 스타일</div>
-      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.relationship_style}</p>
+    html += `<div class="ai-section">
+      <h4>인간관계 스타일</h4>
+      <p>${ai.relationship_style}</p>
     </div>`;
   }
 
   if (ai.career_direction) {
-    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">적성과 진로</div>
-      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.career_direction}</p>
+    html += `<div class="ai-section">
+      <h4>적성과 진로</h4>
+      <p>${ai.career_direction}</p>
     </div>`;
   }
 
   if (ai.growth_areas && ai.growth_areas.length) {
-    html += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:8px">성장 과제</div>
-      ${ai.growth_areas.map(g => `<div style="display:flex;gap:8px;margin-bottom:6px">
-        <span style="color:var(--gold);flex-shrink:0">◇</span>
-        <p style="color:var(--text-2);line-height:1.6;font-size:.85rem;margin:0">${g}</p>
-      </div>`).join('')}
+    html += `<div class="ai-section">
+      <h4>성장 과제</h4>
+      <ul>${ai.growth_areas.map(g => `<li>${g}</li>`).join('')}</ul>
     </div>`;
   }
 
   if (ai.year_2026) {
-    html += `<div style="background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.3);border-radius:10px;padding:14px">
-      <div style="font-size:.72rem;color:var(--gold);font-weight:600;margin-bottom:6px">📅 2026년 흐름</div>
-      <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.year_2026}</p>
+    html += `<div class="ai-section ai-year">
+      <h4>📅 2026년 흐름</h4>
+      <p>${ai.year_2026}</p>
     </div>`;
   }
 
-  html += '</div>';
+  html += `<p class="ai-disclaimer">※ AI 명리 해석은 참고용 정보입니다.</p></div>`;
   container.innerHTML = html;
 }
