@@ -46,6 +46,18 @@ nova-learn 자율성장 2차 실행 결과 릴리즈 (nova-document-release t_d0
 - NOVA 21/21 에이전트 evolution 갱신 완료 (avg_score=0.834)
 - nova_chain_engine 3단 자율성장 루프 반복 실증 (5건 연속 성공)
 
+### Sprint 3 nova-learn 지식 통합 공식 릴리즈 (2026-06-08)
+
+nova-document Sprint 3 지식 통합 공식 릴리즈 (nova-document-release t_3bd783f4).
+
+- Pydantic v2 마이그레이션 패턴 공식 릴리즈: 1041→1132 테스트 증가, 93.07% 커버리지 (commit 23bbc20)
+- no_agent watchdog 황금률 Sprint 3 공식 릴리즈: LLM 없이 HTTP 200 감지 + Telegram 알림, 비용 0
+- Telegram message_thread_id int 타입 강제 패턴 공식 릴리즈: `int(os.getenv("TG_THREAD_ID", "9"))` 표준화
+- NOVA 8단계 체인 3차 완주 공식 릴리즈: build→review→security→qa→ship→evaluator→retro→learn 무중단
+- Sprint 3 잔여 블로커 공식 명확화: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93→95%
+- Diataxis 4분류 공식 문서 릴리즈: Tutorial/How-to/Reference/Explanation
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md (8,208자)
+
 ---
 
 ## [v1.2.0] — 2026-06-04 (Sprint 2 완료)

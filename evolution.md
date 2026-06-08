@@ -219,3 +219,22 @@ nova-retro postmortem에서 추출한 교훈을 nova_brain.db에 takes 5건 기�
 - takes 5건 (fact×3, take×2, weight=0.85)
 - 생성: 2026-06-08, 에이전트: nova-learn
 
+
+
+## nova-document-release 공식 릴리즈 — Sprint 3 (2026-06-08)
+
+nova-document 체인에서 정식 문서화된 지식을 공식 릴리즈 (nova-document-release t_3bd783f4).
+
+### 릴리즈된 내용
+
+1. **Pydantic v2 마이그레이션 패턴 공식 릴리즈**: 1041→1132 테스트 증가, 93.07% 커버리지 (commit 23bbc20).
+2. **no_agent watchdog 황금률 Sprint 3 공식 릴리즈**: LLM 없이 HTTP 200 감지 + Telegram 알림, 비용 0.
+3. **Telegram int 타입 필수 패턴 공식 릴리즈**: `int(os.getenv("TG_THREAD_ID", "9"))` 표준화.
+4. **NOVA 8단계 체인 3차 완주 공식 릴리즈**: build→review→security→qa→ship→evaluator→retro→learn 무중단.
+5. **Sprint 3 블로커 공식 명확화**: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93→95%.
+
+### 릴리즈 위치
+
+- CHANGELOG.md: "[Unreleased — Sprint 3]" 섹션에 공식 릴리즈 항목 추가
+- KB: kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md (8,208자)
+- 생성: 2026-06-08, 에이전트: nova-document-release
