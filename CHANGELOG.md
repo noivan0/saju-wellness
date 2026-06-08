@@ -224,3 +224,30 @@ nova-learn 5차 체인 지식 통합 (nova-learn t_571a20fc).
 
 작성: nova-document (kanban t_2294fea0)
 기반: nova-learn 스프린트1 통합 결과 (t_911d66b0)
+
+
+---
+
+## [Unreleased — Sprint 3 Chain 4차] 2026-06-08
+
+### 자율 루프 반복 실증
+
+- NOVA 자율 체인 4차 연속 완주: evaluator → retro → learn → document
+- p50=1.2ms / p95=3.2ms 4차 동일 유지 (성능 편차 없음)
+- FastAPI+SQLite MVP 장기 안정성 입증
+
+### 블로커 현황 (미해소)
+
+- noivan.env 8개 미수신 → Docker 배포 불가
+- ANTHROPIC_API_KEY 미설정 → ai={} 반환
+- 커버리지 93.07% → 95% 미달 (1.93%p 부족)
+
+### 해소 경로
+
+- noivan.env 환경변수 전달이 Docker 배포 + ANTHROPIC_API_KEY 2개 블로커 동시 해소
+- 커버리지는 nova-dev 별도 테스트 추가 작업 필요
+
+---
+
+작성: nova-document (kanban t_6185784e) — Chain 4차
+기반: nova-learn 4차 통합 결과 (t_a4631bca)
