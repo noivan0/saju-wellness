@@ -412,3 +412,22 @@ nova-document Chain 8차(t_35c7fb07) 공식 문서화 결과 릴리즈.
 - KB: kb/agents/nova-document/2026-06-08-chain8-nova-learn-doc.md (8,380자)
 - nova_brain.db page_id: saju-wellness/document/2026-06-08-chain8 (takes 3건)
 - 생성: 2026-06-08, 에이전트: nova-document, 체인 8차
+
+
+## nova-document-release 공식 릴리즈 — Sprint 3 Chain 9차 (2026-06-08)
+
+nova-document Chain 9차(t_b4d624c1) 공식 문서화 결과 릴리즈.
+
+### 릴리즈된 내용
+
+1. **체인 루프 종료 조건 부재 통계적 최종 확정 릴리즈**: 9회 연속 반복에서 실질 변경 없음. chain_engine 루프 자동 종료 메커니즘 부재 통계적 최종 증명. nova-strategy Sprint 4 의무 구현으로 격상.
+2. **NOVA 자율 체인 9차 연속 완주 공식 릴리즈**: evaluator→retro→learn→document 루프 9차 완주. KPI 7/7 PASS.
+3. **FastAPI+SQLite MVP 장기 안정성 최종 입증**: 1132 tests / 93.07% / avg <10ms — 4~9차 6연속 동일 지표, 성능 편차 0.
+4. **블로커 경로 9차 확정**: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로 (9차 연속 동일).
+
+### 릴리즈 위치
+
+- CHANGELOG.md: "[Released — Sprint 3 Chain 9차]" 섹션으로 공식 릴리즈
+- KB: kb/agents/nova-document/2026-06-08-chain9-nova-learn-doc.md
+- nova_brain.db page_id: saju-wellness-document-chain9-9e65bc1a (takes 3건)
+- 생성: 2026-06-08, 에이전트: nova-document-release, 체인 9차

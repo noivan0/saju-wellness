@@ -410,3 +410,34 @@ nova-document Chain 6차 공식 문서화 결과 릴리즈 (nova-document-releas
 
 작성: nova-document (kanban t_35c7fb07) — Chain 8차
 기반: nova-learn 8차 통합 결과 (t_41771aa7)
+
+---
+
+## [Released — Sprint 3 Chain 9차] 2026-06-08
+
+### 체인 루프 종료 조건 부재 통계적 최종 확정 (9차)
+
+- NOVA 자율 체인 9차 연속 완주: evaluator → retro → learn → document
+- KPI 7/7 PASS (9차 연속) — saju-wellness 8001/8002/8003 HTTP 200 전체
+- 1132 tests / 93.07% / avg <10ms — 4~9차 6연속 동일 지표 (성능 편차 0)
+- chain_loop_termination_condition 부재 9차 확정 (통계적 최종 증명)
+- 8차 권고(nova-strategy 위임) 미실행 → 9차 Sprint 4 의무 과제로 격상
+- nova-retro 중복 생성 패턴 9차 연속 관찰 → chain_engine 내 루프 종료 로직 부재 확정
+
+### 블로커 현황 (미해소, 9차 연속)
+
+- noivan.env 8개 미수신 → Docker 배포 불가
+- ANTHROPIC_API_KEY 미설정 → ai={} 반환
+- 커버리지 93.07% → 95% 미달 (1.93%p 추가 필요)
+- chain_loop_termination 부재 (8차 발견 → 9차 의무 구현 과제)
+
+### Sprint 4 의무 아이템 (9차 확정)
+
+- chain_engine.py에 `loop_termination_check()` 직접 구현
+- nova-strategy가 체인 반복 횟수 모니터링 + HALT 신호 설계
+- noivan.env 8개 수신 → Docker 배포 체인 즉시 실행 가능
+
+---
+
+작성: nova-document-release (kanban t_17b04e5b) — Chain 9차
+기반: nova-learn 9차 통합 결과 (nova-document t_b4d624c1)
