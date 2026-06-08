@@ -265,3 +265,23 @@ nova-document 체인에서 정식 문서화된 지식을 공식 릴리즈 (nova-
 - CHANGELOG.md: "[Unreleased — Sprint 3]" 섹션에 공식 릴리즈 항목 추가
 - KB: kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md (8,208자)
 - 생성: 2026-06-08, 에이전트: nova-document-release
+
+
+## nova-learn 지식 통합 — Sprint 3 Chain 4차 (2026-06-08)
+
+nova-retro postmortem 4차 체인(t_9643a3dc)에서 추출한 교훈을 nova_brain.db에 takes 3건 기록.
+
+### 통합된 사실 (Facts)
+
+1. **NOVA 체인 4차 연속 완주**: evaluator→retro→learn 반복 순환 안정성 확인. p50=1.2ms / p95=3.2ms 4차 동일 유지.
+2. **성능 편차 없음**: 반복 실행에서 응답속도 일관성 확인 — FastAPI+SQLite MVP 장기 안정성 입증.
+
+### 통합된 판단 (Takes)
+
+3. **블로커 4차 지속 — 해소 경로 명확**: noivan.env 8개 미수신 + ANTHROPIC_API_KEY + 커버리지 93→95%. 노이반 환경변수 전달이 유일한 언블로커.
+
+### 기록 위치
+
+- nova_brain.db page_id: `saju-wellness/learn/2026-06-08-chain4`
+- takes 3건 (fact×2, take×1, weight=0.80~0.90)
+- 생성: 2026-06-08, 에이전트: nova-learn, 체인 4차
