@@ -470,7 +470,9 @@ def test_auth_refresh_wrong_token_type(api_client):
 def test_auth_delete_no_database_url(api_client):
     """DELETE /api/auth/account — DATABASE_URL 없으면 익명화 스킵 분기 실행"""
     from src.core.auth import create_access_token
-    token = create_access_token(user_id=999)
+    # [QA-FIX] user_id=999는 test_sprint2_insight_routes.py가 공유하므로
+    # revoke_user_tokens(999) 오염 방지를 위해 독립된 ID 사용
+    token = create_access_token(user_id=99999999)
 
     original_db = os.environ.get("DATABASE_URL", "")
     os.environ["DATABASE_URL"] = ""

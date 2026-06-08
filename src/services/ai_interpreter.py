@@ -21,7 +21,7 @@ def _get_async_client():
         try:
             _async_client = anthropic.AsyncAnthropic(
                 api_key=key,
-                base_url="https://h-chat-api.autoever.com/claude-code/v2",
+                base_url="https://internal-apigw-kr.hmg-corp.io/hchat-in/api/v3/claude",
             )
         except Exception:
             return None
@@ -77,7 +77,7 @@ def _get_client():
         try:
             _client = anthropic.Anthropic(
                 api_key=key,
-                base_url="https://h-chat-api.autoever.com/claude-code/v2",
+                base_url="https://internal-apigw-kr.hmg-corp.io/hchat-in/api/v3/claude",
             )
         except Exception:
             return None

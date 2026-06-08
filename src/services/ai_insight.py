@@ -6,9 +6,12 @@
 - 위기 키워드 감지 시 각국 위기상담 안내
 """
 import json
+import logging
 import os
 import asyncio
 from typing import Optional
+
+_log = logging.getLogger(__name__)
 
 # [BLK-H3] AI 동시 호출 제한 — Anthropic 과부하/요금 폭탄 방지
 # [HIGH-1] Python 3.12 RuntimeError 방지: 모듈 레벨 Semaphore 제거 → lazy init
@@ -218,8 +221,7 @@ def generate_daily_insight(
         # [BLK-H1] Anthropic API 장애 → 정적 fallback (서비스 중단 방지)
         content = FALLBACK_MESSAGES.get(lang, FALLBACK_MESSAGES["ko"])
         # 장애 로그 (PII 없음)
-        import logging
-        logging.getLogger(__name__).warning(f"[AI-FALLBACK] {type(ai_err).__name__} — static response returned")
+        _log.warning("[AI-FALLBACK] %s — static response returned", type(ai_err).__name__)
     return {
         "type": "insight",
         "content": content,

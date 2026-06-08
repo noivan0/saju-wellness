@@ -154,7 +154,7 @@ _RESPONSE_FORMAT_JA = """{
 
 _RESPONSE_FORMAT_EN = """{
   "fortune_summary": "Overall fortune flow for today/this week (2-3 sentences, based on Five Elements)",
-  "five_elements_analysis": "Analysis of Five Elements balance/imbalance, suggestions for補completing lacking elements",
+  "five_elements_analysis": "Analysis of Five Elements balance/imbalance, suggestions for completing lacking elements",
   "energy_insight": "Self-understanding insights and positive suggestions matching current energy state",
   "today_advice": "1-2 specific and actionable behavioral advice for today",
   "zodiac_message": "Integrated message combining Western zodiac and Eastern 12 zodiac animals",
@@ -257,7 +257,9 @@ def _build_user_prompt_ko(ctx: SajuPromptContext) -> str:
             f"- 기분 점수: {ctx.mood_score}/5 ({ctx.mood_label or ''})",
         ]
         if ctx.user_message:
-            lines.append(f"- 사용자 메시지: \"{ctx.user_message}\"")
+            # [OWASP A03] 프롬프트 인젝션 방어: user_message 500자 상한 강제
+            safe_msg = str(ctx.user_message)[:500]
+            lines.append(f"- 사용자 메시지: \"{safe_msg}\"")
 
     lines += [
         "",
@@ -314,7 +316,9 @@ def _build_user_prompt_ja(ctx: SajuPromptContext) -> str:
             f"- 気分スコア: {ctx.mood_score}/5 ({ctx.mood_label or ''})",
         ]
         if ctx.user_message:
-            lines.append(f"- ユーザーメッセージ: \"{ctx.user_message}\"")
+            # [OWASP A03] 프롬프트 인젝션 방어: user_message 500자 상한 강제
+            safe_msg = str(ctx.user_message)[:500]
+            lines.append(f"- ユーザーメッセージ: \"{safe_msg}\"")
 
     lines += [
         "",
@@ -373,7 +377,9 @@ def _build_user_prompt_en(ctx: SajuPromptContext) -> str:
             f"- Mood Score: {ctx.mood_score}/5 ({ctx.mood_label or ''})",
         ]
         if ctx.user_message:
-            lines.append(f"- User Message: \"{ctx.user_message}\"")
+            # [OWASP A03] 프롬프트 인젝션 방어: user_message 500자 상한 강제
+            safe_msg = str(ctx.user_message)[:500]
+            lines.append(f"- User Message: \"{safe_msg}\"")
 
     lines += [
         "",

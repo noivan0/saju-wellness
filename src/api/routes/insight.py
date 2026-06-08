@@ -3,8 +3,10 @@
 법적: "코칭/상담" 금지 → "인사이트/해석"
 "AI 코칭 챗봇" 표현 금지 → "AI 인사이트 세션"
 """
+import logging
 import random
 import secrets
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -121,10 +123,11 @@ def get_daily_insight(request: Request, body: InsightRequest):
         raise HTTPException(status_code=400, detail="Invalid input: potential prompt injection detected")
 
     # 위기 감지 선제 처리
+    # 위기 감지 선제 처리 — CRISIS_LINES 재사용 (DRY)
     _CRISIS_MESSAGES = {
-        "ko": ("지금 많이 힘드시겠어요. 혼자 견디지 않아도 됩니다.", "자살예방상담전화 1393 (24시간)", "정신건강 위기상담전화 1577-0199"),
-        "ja": ("今、とても辛い状況なのですね。一人で抱え込まなくて大丈夫です。", "よりそいホットライン 0120-279-338 (24時間)", "いのちの電話 0120-783-556"),
-        "en": ("It sounds like you're going through a really hard time. You don't have to face this alone.", "988 Suicide & Crisis Lifeline — call or text 988 (24h)", "Crisis Text Line: Text HOME to 741741"),
+        "ko": ("지금 많이 힘드시겠어요. 혼자 견디지 않아도 됩니다.", CRISIS_LINES["ko"], "정신건강 위기상담전화 1577-0199"),
+        "ja": ("今、とても辛い状況なのですね。一人で抱え込まなくて大丈夫です。", CRISIS_LINES["ja"], "いのちの電話 0120-783-556"),
+        "en": ("It sounds like you're going through a really hard time. You don't have to face this alone.", CRISIS_LINES["en"], "Crisis Text Line: Text HOME to 741741"),
     }
     if check_crisis_keywords(sanitized_message, lang=body.lang):
         lang = body.lang if body.lang in _CRISIS_MESSAGES else "ko"
@@ -183,7 +186,7 @@ def start_insight_session(request: Request, body: InsightRequest, user=Depends(g
         saju_data = calc_four_pillars(body.birth_year, body.birth_month, body.birth_day, birth_hour=body.birth_hour)
         ai_result = generate_daily_insight(saju_data, sanitized_message, lang=body.lang)
         return {
-            "session_id": f"sess_{secrets.token_hex(16)}",
+            "session_id": f"sess_{uuid.uuid4().hex}",
             "type": "ai_insight_session",
             "content": ai_result.get("content", ""),
             "disclaimer": ai_result.get("disclaimer", _disclaimer(body.lang)),
@@ -191,12 +194,11 @@ def start_insight_session(request: Request, body: InsightRequest, user=Depends(g
         }
     except Exception as _ai_err:
         # AI 실패 시 룰 기반 폴백 (로그)
-        import logging
         logging.getLogger(__name__).warning("AI insight failed: %s", _ai_err)
         element = _get_element_from_birth(body.birth_year, body.birth_month)
         content_fb = _generate_insight(sanitized_message, element)
         return {
-            "session_id": f"sess_{secrets.token_hex(16)}",
+            "session_id": f"sess_{uuid.uuid4().hex}",
             "type": "premium_insight_session",
             "content": content_fb,
             "element": element,

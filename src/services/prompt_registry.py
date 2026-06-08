@@ -35,7 +35,7 @@ RESPONSE_SCHEMA: Dict[str, Dict[str, str]] = {
     "ja": {
         "summary": "運勢サマリー",
         "element": "五行分析",
-        "emotion": "感情コーチング",
+        "emotion": "感情インサイト",
         "advice": "今日のアドバイス",
         "astro": "星座メッセージ",
         "disclaimer": "免責事項",
