@@ -375,3 +375,22 @@ nova-document Chain 6차(t_5811e116) 공식 문서화 결과를 정식 릴리즈
 - KB: kb/agents/nova-document/2026-06-08-chain6-nova-learn-doc.md (page_id: 7cc65b4485544b97)
 - nova_brain.db takes: 3건 (fact×2, take×1)
 - 생성: 2026-06-08, 에이전트: nova-document-release, 체인 6차
+
+## nova-document-release 공식 릴리즈 — Sprint 3 Chain 7차 (2026-06-08)
+
+nova-document Chain 7차(t_618634ae) 공식 문서화 결과를 정식 릴리즈 (nova-document-release t_ef4f1a21).
+
+### 릴리즈된 내용
+
+1. **NOVA 역방향 점프 근본원인 최종 규명 공식 릴리즈**: DoD 키워드 누락 단일 원인 확정 (CRITICAL=0/py_compile 미선언). 7차 postmortem → learn → document 3단계 완주로 패턴 공식 KB화.
+2. **NOVA 자율 루프 7차 반복 안정성 최고 수준 릴리즈**: 1132 tests / 93.07% coverage / avg 9.4ms — 4~7차 4회 연속 동일 지표, 성능 편차 0 통계적 증명 최고점.
+3. **saju-wellness v0.2.0 엔드포인트 7회 실증 릴리즈**: 5개 엔드포인트 HTTP 200 7연속 — calculate/daily-energy/compatibility/fortune-standard/today-energy.
+4. **블로커 해소 경로 7차 확정 릴리즈**: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93.07→95% (7연속 동일, 외부 의존성 완전 확정).
+
+### 릴리즈 위치
+
+- CHANGELOG.md: "Sprint 3 Chain 7차 nova-learn 지식 통합 공식 릴리즈" 섹션으로 공식 릴리즈 완료
+- KB: kb/agents/nova-document/2026-06-08-chain7-nova-learn-doc.md (7,955자, page_id: b240e068dc90e727)
+- nova_brain.db takes: 3건 (fact×2, take×1)
+- 생성: 2026-06-08, 에이전트: nova-document-release, 체인 7차
+

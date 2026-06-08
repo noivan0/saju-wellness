@@ -58,6 +58,16 @@ nova-document Sprint 3 지식 통합 공식 릴리즈 (nova-document-release t_3
 - Diataxis 4분류 공식 문서 릴리즈: Tutorial/How-to/Reference/Explanation
 - KB 릴리즈: kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md (8,208자)
 
+### Sprint 3 Chain 7차 nova-learn 지식 통합 공식 릴리즈 (2026-06-08)
+
+nova-document Chain 7차 공식 문서화 결과 릴리즈 (nova-document-release t_ef4f1a21).
+
+- NOVA 역방향 점프 근본원인 최종 규명 공식 릴리즈: DoD 키워드 누락(CRITICAL=0/py_compile 미선언) 단일 원인 확정 — 7차 postmortem 완주
+- NOVA 자율 루프 7차 반복 안정성 최고 수준 릴리즈: 1132 tests / 93.07% coverage / avg 9.4ms — 4~7차 4회 연속 동일 지표 (성능 편차 0 통계 증명)
+- saju-wellness v0.2.0 전체 엔드포인트 7회 실증 릴리즈: 5개 엔드포인트 HTTP 200 연속 — calculate/daily-energy/compatibility/fortune-standard/today-energy
+- 블로커 해소 경로 7차 확정 릴리즈: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93.07→95% (7연속 동일, 외부 의존성 완전 확정)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain7-nova-learn-doc.md (7,955자, page_id: b240e068dc90e727)
+
 ### Sprint 5차 체인 nova-learn 지식 통합 (2026-06-08)
 
 nova-learn 5차 체인 지식 통합 (nova-learn t_571a20fc).
