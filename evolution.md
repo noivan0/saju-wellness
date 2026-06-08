@@ -126,6 +126,8 @@ nova-learn 자율성장 2차 실행. 3개 앱(멘탈로드/케어링/사주담) 
 | 2026-06-04 | kb/agents/nova-document/2026-06-04-nova-learn-knowledge-integration.md | nova-document (t_40e1a6fe) |
 | 2026-06-04 | CHANGELOG.md (v1.2.0 Sprint2 섹션) | nova-document (t_40e1a6fe) |
 | 2026-06-08 | evolution.md 자율학습 루프 섹션 추가 | nova-document-release (t_d025d1fc) |
+| 2026-06-08 | kb/agents/nova-document/2026-06-08-watchdog-saju-wellness-doc.md | nova-document (t_be783e46) |
+| 2026-06-08 | CHANGELOG.md watchdog 크론 체인 정식 문서화 릴리즈 | nova-document-release (t_63368324) |
 
 ---
 
@@ -136,3 +138,60 @@ nova-learn 자율성장 2차 실행. 3개 앱(멘탈로드/케어링/사주담) 
 - Phase 2: QA ✅ (커버리지 93.83%, CRITICAL 0, HIGH 0, MEDIUM 0)
 - Phase 3: 보안 ✅ (CRITICAL 0, HIGH 3 수정 검증, MEDIUM 3 수정 검증)
 - Phase 4: 배포 🔲 (noivan.env 8개 + Docker 환경 필요)
+
+---
+
+## 스프린트3 Evaluator PASS — nova-retro (2026-06-08)
+
+nova-evaluator KPI 전체 통과 후 blameless postmortem 실행.
+
+### 평가 수치 (commit 23bbc20)
+
+| 항목 | 결과 | 목표 | 판정 |
+|------|------|------|------|
+| 테스트 통과 | 1132 passed / 0 failed | 0 failed | PASS ✅ |
+| 커버리지 | 93.07% | 72% 이상 | PASS ✅ |
+| 평균 응답시간 | 9.4ms | < 200ms | PASS ✅ (21배 여유) |
+| 최대 응답시간 | 13ms | - | 양호 |
+| CRITICAL 버그 | 0건 | 0건 | PASS ✅ |
+| HIGH 버그 | 0건 | 0건 | PASS ✅ |
+| 엔드포인트 상태 | /health /app /docs /api/saju/* 전부 HTTP 200 | - | PASS ✅ |
+| 입력 유효성 | 범위 초과 → 422 + 상세 에러 | - | PASS ✅ |
+| 궁합 점수 | score=45 (0-100 내) | - | PASS ✅ |
+| 면책고지 | disclaimer/legal 필드 포함 | - | PASS ✅ |
+| AI 필드 | ai={} (ANTHROPIC_API_KEY 미설정) | MVP 허용 | PASS ✅ |
+
+### 잘 된 것 (What Went Well)
+
+1. **Pydantic v2 마이그레이션 안정화**: nova-ship commit 23bbc20에서 완료. 1041 → 1132 테스트로 증가, 커버리지 유지.
+2. **응답속도 매우 양호**: avg 9.4ms — FastAPI + SQLite 조합이 MVP 단계에서 충분히 검증됨.
+3. **면책고지 자동 포함**: disclaimer/legal 필드가 전 응답에 자동 삽입 — 법적 리스크 선제 대응 정상 동작.
+4. **NOVA 자율 체인 연속 실증**: build → review → security → qa → ship → evaluator → retro 7단계 무중단 완주. 3차 반복 성공.
+5. **보안 CRITICAL/HIGH 0건 유지**: Sprint 1~2 수정사항(Semaphore, JWT Redis, slowapi) 전부 회귀 없음.
+
+### 개선 필요 (What Needs Improvement)
+
+1. **AI 필드 비어 있음**: ANTHROPIC_API_KEY 미설정 → ai={} 반환. MVP 허용이지만 실서비스 전 필수 연동.
+   - 해결: noivan.env 8개 수신 후 .env 적용 → AI 해석 활성화
+2. **커버리지 93.07% (목표 95% 미달)**: Sprint 2 말 93.83%에서 소폭 하락.
+   - 원인: Pydantic v2 마이그레이션 과정 일부 경로 미커버
+   - 해결: Sprint 3에서 미커버 모듈 보완 (배포 후 병행 가능)
+3. **Docker 배포 미실행**: noivan.env 8개 아직 미수신 → 실서버 배포 blocked 상태 유지.
+   - 해결 경로: 노이반 .env 전달 → docker-compose up → 실서버 배포
+
+### 학습 사항 (Lessons Learned)
+
+1. **no_agent watchdog 패턴 황금률 실증**: saju-wellness 3개 앱 30분 주기 HTTP 200 감지 — LLM 없이 완전 alerting 루프 동작 확인.
+2. **NOVA 3단 자율성장 루프**: evaluator → retro → learn → document 연속 실행 5/5 PASS. 체인 엔진 안정성 입증.
+3. **TG_THREAD_ID int 변환**: str→int 명시 변환으로 Telegram API 400 오류 예방 패턴 정립.
+
+### Sprint 3 남은 과제
+
+| 과제 | 우선순위 | 블로커 |
+|------|----------|--------|
+| ANTHROPIC_API_KEY 연동 | HIGH | noivan.env 수신 |
+| Docker 실서버 배포 | HIGH | noivan.env 수신 |
+| 커버리지 93→95% | MEDIUM | 배포 후 병행 |
+| AI 멀티워커 실증 | MEDIUM | Docker 환경 필요 |
+| 일본 서비스 법무 검토 | LOW | 국내 배포 후 |
+
