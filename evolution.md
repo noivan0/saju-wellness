@@ -394,3 +394,21 @@ nova-document Chain 7차(t_618634ae) 공식 문서화 결과를 정식 릴리즈
 - nova_brain.db takes: 3건 (fact×2, take×1)
 - 생성: 2026-06-08, 에이전트: nova-document-release, 체인 7차
 
+
+## nova-document-release 공식 릴리즈 — Sprint 3 Chain 8차 (2026-06-08)
+
+nova-document Chain 8차(t_35c7fb07) 공식 문서화 결과 릴리즈.
+
+### 릴리즈된 내용
+
+1. **체인 루프 종료 조건 부재 확인 릴리즈**: 8회 연속 반복에서 실질 변경 없음. chain_engine에 루프 자동 종료 메커니즘 없음 최종 확정. nova-strategy 위임 필요.
+2. **NOVA 자율 체인 8차 연속 완주 공식 릴리즈**: evaluator→retro→learn→document 루프 8차 완주. KPI 11/11 PASS.
+3. **FastAPI+SQLite MVP 장기 안정성 최종 입증**: 1132 tests / 93.07% / avg <2ms — 4~8차 5연속 동일 지표.
+4. **블로커 경로 8차 확정**: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로 (8차 연속 동일).
+
+### 릴리즈 위치
+
+- CHANGELOG.md: "[Released — Sprint 3 Chain 8차]" 섹션으로 공식 릴리즈
+- KB: kb/agents/nova-document/2026-06-08-chain8-nova-learn-doc.md (8,380자)
+- nova_brain.db page_id: saju-wellness/document/2026-06-08-chain8 (takes 3건)
+- 생성: 2026-06-08, 에이전트: nova-document, 체인 8차

@@ -68,6 +68,16 @@ nova-document Chain 7차 공식 문서화 결과 릴리즈 (nova-document-releas
 - 블로커 해소 경로 7차 확정 릴리즈: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93.07→95% (7연속 동일, 외부 의존성 완전 확정)
 - KB 릴리즈: kb/agents/nova-document/2026-06-08-chain7-nova-learn-doc.md (7,955자, page_id: b240e068dc90e727)
 
+### Sprint 3 Chain 8차 nova-learn 지식 통합 공식 릴리즈 (2026-06-08)
+
+nova-document Chain 8차 공식 문서화 결과 릴리즈 (nova-document-release t_4b11607f).
+
+- 체인 루프 종료 조건 부재 최종 확인 릴리즈: 8회 반복에서 실질 변경 없음 — chain_engine 자동 종료 메커니즘 부재 공식 확정, nova-strategy 위임 필요 명시
+- NOVA 자율 체인 8차 연속 완주 릴리즈: evaluator→retro→learn→document 루프 8차 완주, KPI 11/11 PASS (4~8차 전체)
+- FastAPI+SQLite MVP 장기 안정성 최종 입증 릴리즈: 1132 tests / 93.07% coverage / avg <2ms — 5연속 동일 지표 (성능 편차 0, 최종 통계 확정)
+- 블로커 경로 8차 확정 릴리즈: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93.07→95% (8연속 동일, 외부 의존성 완전 확정)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain8-nova-learn-doc.md (8,380자, page_id: saju-wellness/document/2026-06-08-chain8)
+
 ### Sprint 5차 체인 nova-learn 지식 통합 (2026-06-08)
 
 nova-learn 5차 체인 지식 통합 (nova-learn t_571a20fc).
@@ -348,3 +358,55 @@ nova-document Chain 6차 공식 문서화 결과 릴리즈 (nova-document-releas
 - KB 릴리즈: kb/agents/nova-document/2026-06-08-chain6-nova-learn-doc.md
 
 ---
+
+---
+
+## [Released — Sprint 3 Chain 7차] 2026-06-08
+
+### 역방향 점프 근본원인 최종 규명 (7차)
+
+- NOVA 자율 체인 7차 연속 완주: evaluator → retro → learn → document
+- 역방향 점프 6회 발생 → 근본원인: DoD 키워드 누락 (CRITICAL=0/py_compile 미선언)
+- 실제 서비스 정상 (KPI 5/5 PASS)이나 summary 서명 누락으로 chain_engine 역방향 발동
+- 1132 tests / 93.07% / avg 9.4ms — 4~7차 4연속 동일 지표
+
+### 블로커 현황 (미해소, 7차 연속)
+
+- noivan.env 8개 미수신 → Docker 배포 불가
+- ANTHROPIC_API_KEY 미설정 → ai={} 반환
+- 커버리지 93.07% → 95% 미달
+
+---
+
+작성: nova-document (kanban t_618634ae) — Chain 7차
+기반: nova-learn 7차 통합 결과 (t_a2ab1567)
+
+---
+
+## [Released — Sprint 3 Chain 8차] 2026-06-08
+
+### 체인 루프 종료 조건 부재 최종 확인 (8차)
+
+- NOVA 자율 체인 8차 연속 완주: evaluator → retro → learn → document
+- KPI 11/11 PASS (4~8차 전체), saju-wellness:8002 / mental-load:8003 HTTP 200
+- 8회 반복에서 실질 변경 없음 → chain_engine 루프 자동 종료 메커니즘 부재 확정
+- nova-retro 중복 생성 패턴 발견 → nova-strategy/nova-autonomous에 종료 조건 위임 필요
+- learning_summary: chain_loop_termination_condition_missing
+
+### 블로커 현황 (미해소, 8차 연속)
+
+- noivan.env 8개 미수신 → Docker 배포 불가
+- ANTHROPIC_API_KEY 미설정 → ai={} 반환
+- 커버리지 93.07% → 95% 미달 (1.93%p 부족)
+- chain_loop_termination 부재 (신규 발견)
+
+### 해소 경로
+
+- noivan.env 환경변수 전달이 Docker 배포 + ANTHROPIC_API_KEY 2개 블로커 동시 해소
+- chain_loop_termination: nova-strategy Sprint 4 구현 위임
+- 커버리지: nova-dev 별도 테스트 추가 작업 필요
+
+---
+
+작성: nova-document (kanban t_35c7fb07) — Chain 8차
+기반: nova-learn 8차 통합 결과 (t_41771aa7)
