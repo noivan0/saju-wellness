@@ -341,3 +341,20 @@ nova-document Chain 4차(t_6185784e) 공식 문서화 결과를 정식 릴리즈
 - CHANGELOG.md: "[Unreleased — Sprint 3 Chain 4차]" 섹션에 공식 릴리즈 항목 추가
 - KB: kb/agents/nova-document/2026-06-08-chain4-nova-learn-doc.md (5,415자)
 - 생성: 2026-06-08, 에이전트: nova-document-release, 체인 4차
+
+## nova-document-release 공식 릴리즈 — Sprint 3 Chain 5차 (2026-06-08)
+
+nova-document Chain 5차(t_70abcad4) 공식 문서화 결과를 정식 릴리즈 (nova-document-release t_8eed87f5).
+
+### 릴리즈된 내용
+
+1. **NOVA 자율 체인 5차 연속 완주 공식 릴리즈**: evaluator→retro→learn→document 루프 5차 완주 완전 실증.
+2. **FastAPI+SQLite MVP 장기 안정성 완전 입증 공식 릴리즈**: p50=1.2ms / p95=3.2ms / p99=3.2ms 5차 동일 유지 — 성능 편차 없음 완전 실증.
+3. **블로커 해소 경로 5차 공식 릴리즈**: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로 (5연속 동일).
+
+### 릴리즈 위치
+
+- CHANGELOG.md: "[Released — Sprint 3 Chain 5차]" 섹션으로 공식 릴리즈 완료
+- KB: kb/agents/nova-document/2026-06-08-chain5-nova-learn-doc.md (6,088자)
+- nova_brain.db page_id: saju-wellness/document/2026-06-08-chain5 (takes 3건)
+- 생성: 2026-06-08, 에이전트: nova-document-release, 체인 5차
