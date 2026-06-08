@@ -251,3 +251,13 @@ nova-learn 5차 체인 지식 통합 (nova-learn t_571a20fc).
 
 작성: nova-document (kanban t_6185784e) — Chain 4차
 기반: nova-learn 4차 통합 결과 (t_a4631bca)
+
+### Sprint 3 Chain 4차 nova-document-release 공식 릴리즈 (2026-06-08)
+
+nova-document Chain 4차 공식 문서화 결과 릴리즈 (nova-document-release t_81644a5c).
+
+- NOVA 자율 체인 4차 반복 안정성 공식 릴리즈: evaluator→retro→learn→document 루프 안정 순환 실증
+- FastAPI+SQLite MVP 장기 안정성 공식 릴리즈: p50=1.2ms / p95=3.2ms 4차 연속 동일 — 캐시/메모리 누수 없음
+- 블로커 해소 경로 4차 공식 릴리즈: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로
+- Diataxis 4분류 공식 문서 릴리즈: Tutorial/How-to/Reference/Explanation (KB 5,415자)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain4-nova-learn-doc.md

@@ -324,3 +324,20 @@ nova-learn(t_a4631bca) chain_iteration=4 교훈을 Diataxis 4분류로 공식 �
 - takes 3건 (fact×2, take×1, weight=0.85~0.90)
 - KB 파일: kb/agents/nova-document/2026-06-08-chain4-nova-learn-doc.md (5,415자)
 - 생성: 2026-06-08, 에이전트: nova-document, 체인 4차
+
+
+## nova-document-release 공식 릴리즈 — Sprint 3 Chain 4차 (2026-06-08)
+
+nova-document Chain 4차(t_6185784e) 공식 문서화 결과를 정식 릴리즈 (nova-document-release t_81644a5c).
+
+### 릴리즈된 내용
+
+1. **NOVA 자율 체인 4차 반복 안정성 공식 릴리즈**: evaluator→retro→learn→document 루프 안정 순환 실증.
+2. **FastAPI+SQLite MVP 장기 안정성 공식 릴리즈**: p50=1.2ms / p95=3.2ms 4차 연속 동일 — 캐시/메모리 누수 없음 입증.
+3. **블로커 해소 경로 4차 공식 릴리즈**: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로.
+
+### 릴리즈 위치
+
+- CHANGELOG.md: "[Unreleased — Sprint 3 Chain 4차]" 섹션에 공식 릴리즈 항목 추가
+- KB: kb/agents/nova-document/2026-06-08-chain4-nova-learn-doc.md (5,415자)
+- 생성: 2026-06-08, 에이전트: nova-document-release, 체인 4차
