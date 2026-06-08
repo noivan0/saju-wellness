@@ -127,7 +127,9 @@ nova-learn 자율성장 2차 실행. 3개 앱(멘탈로드/케어링/사주담) 
 | 2026-06-04 | CHANGELOG.md (v1.2.0 Sprint2 섹션) | nova-document (t_40e1a6fe) |
 | 2026-06-08 | evolution.md 자율학습 루프 섹션 추가 | nova-document-release (t_d025d1fc) |
 | 2026-06-08 | kb/agents/nova-document/2026-06-08-watchdog-saju-wellness-doc.md | nova-document (t_be783e46) |
-| 2026-06-08 | CHANGELOG.md watchdog 크론 체인 정식 문서화 릴리즈 | nova-document-release (t_63368324) |
+| 2026-06-08 | evolution.md nova-learn Sprint 3 섹션 추가 | nova-learn (t_abccb796) |
+| 2026-06-08 | kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md | nova-document (t_c9747200) |
+| 2026-06-08 | CHANGELOG.md Sprint 3 nova-learn 정식 문서화 섹션 추가 | nova-document (t_c9747200) |
 
 ---
 

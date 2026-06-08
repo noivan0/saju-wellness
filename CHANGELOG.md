@@ -16,6 +16,27 @@
 - 최종 보안 감사 (OWASP Top10 점검)
 - noivan.env 8개 수신 → Docker 배포
 
+### Sprint 3 nova-learn 지식 통합 정식 문서화 (2026-06-08)
+
+nova-document Sprint 3 체인 문서화 (nova-document t_c9747200).
+
+- Pydantic v2 마이그레이션 패턴 공식 등재: 1041→1132 테스트 부수 증가, 93.07% 커버리지 유지
+- no_agent watchdog 황금률 Sprint 3 재확인: saju-wellness 3서비스 HTTP 200, 비용 0
+- Telegram message_thread_id int 타입 필수 패턴 정립
+- NOVA 8단계 체인 3차 완주 실증: build→review→security→qa→ship→evaluator→retro→learn 무중단
+- Sprint 3 잔여 블로커 명확화: noivan.env 8개 + ANTHROPIC_API_KEY + 커버리지 93→95%
+- KB 등록: kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md (8,208자)
+
+### watchdog + 헬스체크 크론 체인 정식 문서화 릴리즈 (2026-06-08)
+
+nova-document 정식 문서화 결과 릴리즈 (nova-document-release t_63368324).
+
+- no_agent watchdog 황금률 실증: saju-wellness 3개 서비스 HTTP 200 확인 (크론 30분 주기, LLM 없이 완전 alerting 루프)
+- TG_THREAD_ID int 변환 패턴 정립: str→int 명시 변환으로 Telegram API 오류 예방
+- nova_chain 3단 자율성장 루프 반복 실증: evaluator→retro→learn→document 5/5 PASS
+- Diataxis 4분류 공식 문서 구조 적용: Tutorial/How-to/Reference/Explanation
+- KB 등록: kb/agents/nova-document/2026-06-08-watchdog-saju-wellness-doc.md (5,765자)
+
 ### 자율 학습 루프 릴리즈 (2026-06-08)
 
 nova-learn 자율성장 2차 실행 결과 릴리즈 (nova-document-release t_d025d1fc).
