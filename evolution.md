@@ -195,3 +195,25 @@ nova-evaluator KPI 전체 통과 후 blameless postmortem 실행.
 | AI 멀티워커 실증 | MEDIUM | Docker 환경 필요 |
 | 일본 서비스 법무 검토 | LOW | 국내 배포 후 |
 
+
+## nova-learn 지식 통합 — Sprint 3 (2026-06-08)
+
+nova-retro postmortem에서 추출한 교훈을 nova_brain.db에 takes 5건 기록 완료.
+
+### 통합된 사실 (Facts)
+
+1. **Pydantic v2 마이그레이션 패턴**: 마이그레이션 완료 시 테스트 수 증가 부수효과 확인 (1041→1132). 커버리지 93.07% 유지 (commit 23bbc20).
+2. **no_agent watchdog 황금률 실증**: LLM 없이 30분 주기 HTTP 200 감지 + Telegram 알림. 비용 0, 지연 최소. saju-wellness 3개 앱 실증.
+3. **Telegram int 타입 필수**: message_thread_id는 반드시 int. str 타입이면 400 Bad Request — TG_THREAD_ID str→int 변환 패턴 정립.
+
+### 통합된 판단 (Takes)
+
+4. **NOVA 체인 3차 완주**: build→review→security→qa→ship→evaluator→retro→learn 8단계 무중단. nova_chain_engine.py v3.0 안정성 확인.
+5. **Sprint 3 잔여 블로커**: noivan.env 8개 미수신(Docker 배포 불가) + ANTHROPIC_API_KEY 미설정(ai={}) + 커버리지 93→95% 미달 — 노이반 환경변수 수신 후 해제 가능.
+
+### 기록 위치
+
+- nova_brain.db page_id: `saju-wellness/learn/2026-06-08`
+- takes 5건 (fact×3, take×2, weight=0.85)
+- 생성: 2026-06-08, 에이전트: nova-learn
+
