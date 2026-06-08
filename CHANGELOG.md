@@ -58,6 +58,15 @@ nova-document Sprint 3 지식 통합 공식 릴리즈 (nova-document-release t_3
 - Diataxis 4분류 공식 문서 릴리즈: Tutorial/How-to/Reference/Explanation
 - KB 릴리즈: kb/agents/nova-document/2026-06-08-sprint3-nova-learn-doc.md (8,208자)
 
+### Sprint 5차 체인 nova-learn 지식 통합 (2026-06-08)
+
+nova-learn 5차 체인 지식 통합 (nova-learn t_571a20fc).
+
+- NOVA 5차 체인 연속 완주 실증: evaluator→retro→learn 루프 5회 정상 순환, p50=1.2ms / p95=3.2ms
+- 성능 일관성 5회 완전 입증: FastAPI+SQLite error_rate=0.0% 5연속 유지
+- 블로커 5차 지속 명확화: noivan.env + ANTHROPIC_API_KEY + 커버리지 — 해소 경로 단일
+- nova_brain.db: page_id=saju-wellness/learn/2026-06-08-chain5, takes 3건 기록
+
 ---
 
 ## [v1.2.0] — 2026-06-04 (Sprint 2 완료)

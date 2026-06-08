@@ -160,6 +160,27 @@ nova-evaluator → nova-retro 체인 연속 실행 4차 실증.
 
 ---
 
+## nova-learn 지식 통합 — 5차 체인 (2026-06-08)
+
+nova-retro postmortem 5차 체인(t_d9a971d6)에서 추출한 교훈을 nova_brain.db에 takes 3건 기록.
+
+### 통합된 사실 (Facts)
+
+1. **NOVA 5차 체인 연속 완주**: evaluator→retro→learn 루프 5회 연속 정상 순환 확인. p50=1.2ms / p95=3.2ms / p99=3.2ms 완전 안정.
+2. **성능 일관성 5회 실증**: 반복 실행에서 응답속도 편차 없음 — FastAPI+SQLite MVP 장기 안정성 완전 입증. (error_rate=0.0% 5연속 유지)
+
+### 통합된 판단 (Takes)
+
+3. **블로커 5차 지속 — 해소 경로 단일**: noivan.env 8개 미수신 + ANTHROPIC_API_KEY 미설정 + 커버리지 93→95%. 자율 루프가 정상 순환 중이므로 블로커 해소 전까지는 현 아키텍처 유지가 최선.
+
+### 기록 위치
+
+- nova_brain.db page_id: `saju-wellness/learn/2026-06-08-chain5`
+- takes 3건 (fact×2, take×1, weight=0.88~0.92)
+- 생성: 2026-06-08, 에이전트: nova-learn, 체인 5차
+
+---
+
 ## Phase 상태
 
 - Phase 0: 환경 설정 ✅ (변수 정의 완료, 수신 대기)
@@ -285,3 +306,21 @@ nova-retro postmortem 4차 체인(t_9643a3dc)에서 추출한 교훈을 nova_bra
 - nova_brain.db page_id: `saju-wellness/learn/2026-06-08-chain4`
 - takes 3건 (fact×2, take×1, weight=0.80~0.90)
 - 생성: 2026-06-08, 에이전트: nova-learn, 체인 4차
+
+
+## nova-document 공식 문서화 — Sprint 3 Chain 4차 (2026-06-08)
+
+nova-learn(t_a4631bca) chain_iteration=4 교훈을 Diataxis 4분류로 공식 문서화 (nova-document t_6185784e).
+
+### 문서화된 내용
+
+1. **NOVA 체인 4차 반복 안정성**: evaluator→retro→learn 순환 루프 p50=1.2ms / p95=3.2ms 4차 동일 유지. 캐시/메모리 누수 없음 실증.
+2. **성능 편차 없음**: FastAPI+SQLite MVP 장기 안정성 확인 (4차 연속 동일 지표).
+3. **블로커 해소 경로 명확화**: noivan.env 8개 전달이 Docker 배포 + ANTHROPIC_API_KEY 동시 해소 유일 경로.
+
+### 기록 위치
+
+- nova_brain.db page_id: `saju-wellness/document/2026-06-08-chain4`
+- takes 3건 (fact×2, take×1, weight=0.85~0.90)
+- KB 파일: kb/agents/nova-document/2026-06-08-chain4-nova-learn-doc.md (5,415자)
+- 생성: 2026-06-08, 에이전트: nova-document, 체인 4차
