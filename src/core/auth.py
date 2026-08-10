@@ -8,11 +8,12 @@
 import os
 import logging
 import threading
+import uuid
 import jwt
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Set
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 logger = logging.getLogger(__name__)
@@ -119,7 +120,21 @@ ALGORITHM = "HS256"
 ACCESS_EXPIRE_MINUTES = 60 * 24       # 24h
 REFRESH_EXPIRE_DAYS = 30              # 30일
 
-security = HTTPBearer()
+class _Bearer401(HTTPBearer):
+    """[FIX-401] 기본 HTTPBearer는 Authorization 헤더 누락 시 403을 던진다.
+    (starlette 설계상 '인증 스킴 없음' = Forbidden 취급)
+    이 서비스의 테스트/클라이언트 계약은 '인증 안 됨' = 401 이므로 오버라이드한다."""
+
+    async def __call__(self, request: Request):
+        try:
+            return await super().__call__(request)
+        except HTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(status_code=401, detail="인증이 필요합니다.")
+            raise
+
+
+security = _Bearer401()
 
 
 def hash_password(password: str) -> str:
@@ -147,6 +162,7 @@ def create_access_token(user_id: int, extra: dict | None = None) -> str:
         "sub": str(user_id),
         "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_EXPIRE_MINUTES),
         "iat": datetime.now(timezone.utc),
+        "jti": str(uuid.uuid4()),
         "type": "access",
         **(extra or {}),
     }

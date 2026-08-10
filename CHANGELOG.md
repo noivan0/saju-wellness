@@ -16,6 +16,41 @@
 - 최종 보안 감사 (OWASP Top10 점검)
 - noivan.env 8개 수신 → Docker 배포
 
+### Chain 18 nova-document 정식 문서화 공식 릴리즈 (2026-06-08)
+
+nova-document Chain 18 정식 문서화 결과 릴리즈 (nova-document-release t_f86434db).
+
+- NOVA 자율 루프 18차 완주 공식 릴리즈: evaluator→retro→learn→document 4단계 18회 무중단 순환
+- saju-wellness 18차 연속 PASS 릴리즈: /health(status=ok, db=ok, engine=ok, v0.2.0), /api/saju/calculate(OK), /api/saju/compatibility(score=70), port 8002, anomaly=false, incidents=0
+- Blameless Postmortem 18회 누적 릴리즈: 반복 장애 패턴 완전 부재 — 5xx=0, 성능저하=0, 의존성장애=0
+- loop_termination_check 미구현 18차 경보 릴리즈: max_loops=15 기준 3차 초과 — Sprint 4 즉시 구현 최긴급
+- 지속 블로커 18차 확정 릴리즈: noivan.env 8개 + ANTHROPIC_API_KEY (외부 의존성, 해소 경로 단일)
+- 커버리지: 94.97% (tests: 1203, failed: 0)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain18-saju-wellness-learn-doc.md (Diataxis 4분류)
+
+### Chain 17b (2사이클) nova-document-release 공식 릴리즈 (2026-06-08)
+
+nova-document-release Chain 17 2사이클 결과 릴리즈 (nova-document-release t_2c59c72d).
+
+- NOVA 자율 루프 17차 2사이클 완주 릴리즈: evaluator→retro→learn→document 4단계 17회 무중단 순환 (2사이클)
+- saju-wellness 17차 2사이클 연속 PASS 릴리즈: /health HTTP 200 (status=ok, db=ok, engine=ok, v0.2.0), port 8002, anomaly=false, incidents=0
+- Blameless Postmortem 17회 2사이클 누적 릴리즈: 반복 장애 패턴 완전 부재 — 5xx=0, 성능저하=0, 의존성장애=0
+- loop_termination_check 미구현 17차 2사이클 경보 릴리즈: max_loops=15 기준 2차 초과 — Sprint 4 즉시 구현 최긴급
+- 지속 블로커 17차 2사이클 확정 릴리즈: noivan.env 8개 + ANTHROPIC_API_KEY (외부 의존성, 해소 경로 단일)
+- 커버리지: 94.97% (tests: 1203, failed: 0)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain17b-saju-wellness-learn-doc.md (Diataxis 4분류)
+
+### Chain 17 nova-document 정식 문서화 공식 릴리즈 (2026-06-08)
+
+nova-document Chain 17 정식 문서화 결과 릴리즈 (nova-document-release t_ed84086b).
+
+- NOVA 자율 루프 17차 완주 공식 릴리즈: evaluator→retro→learn→document 4단계 17회 무중단 순환
+- saju-wellness 17차 연속 PASS 릴리즈: /health(ok), /api/saju/calculate(OK), /api/saju/compatibility(score=70), port 8002, anomaly=false, incidents=0
+- Blameless Postmortem 17회 누적 릴리즈: 반복 장애 패턴 완전 부재 — 5xx=0, 성능저하=0, 의존성장애=0
+- loop_termination_check 미구현 17차 경보 릴리즈: max_loops=15 기준 2차 초과 — Sprint 4 즉시 구현 필수
+- 지속 블로커 17차 확정 릴리즈: noivan.env 8개 + ANTHROPIC_API_KEY (외부 의존성, 해소 경로 단일)
+- KB 릴리즈: kb/agents/nova-document/2026-06-08-chain17-saju-wellness-learn-doc.md (Diataxis 4분류)
+
 ### Sprint 3 nova-learn 지식 통합 정식 문서화 (2026-06-08)
 
 nova-document Sprint 3 체인 문서화 (nova-document t_c9747200).
@@ -441,3 +476,35 @@ nova-document Chain 6차 공식 문서화 결과 릴리즈 (nova-document-releas
 
 작성: nova-document-release (kanban t_17b04e5b) — Chain 9차
 기반: nova-learn 9차 통합 결과 (nova-document t_b4d624c1)
+
+---
+
+## [Released — Sprint 3 Chain 10차] 2026-06-08
+
+### 테스트 커버리지 임계치 근접 + 안정 운영 최종 확인 (10차)
+
+- NOVA 자율 체인 10차 연속 완주: evaluator → retro → learn → document
+- KPI 9/9 PASS (10차) — tests: 1203 passed / coverage: 94.97% / failed: 0
+- 9차(1132 tests, 93.07%) 대비 테스트 +71건, 커버리지 +1.90pp 향상
+- v0.2.0 안정 운영 단계 진입 확정 (Blameless Postmortem 10회 누적, 반복 장애 패턴 없음)
+- 커버리지 95% 목표까지 잔여 0.03%p — 사실상 달성 임박
+- chain_loop_termination_condition 부재 10차 확정 (Sprint 4 의무 구현 과제)
+
+### 블로커 현황 (미해소, 10차 연속)
+
+- noivan.env 8개 미수신 → Docker 배포 불가
+- ANTHROPIC_API_KEY 미설정 → ai={} 반환
+- 커버리지 94.97% → 95% 목표 0.03%p 잔여 (nova-dev 소규모 추가 가능)
+- chain_loop_termination 부재 (8차 발견 → Sprint 4 의무 구현)
+
+### Sprint 4 의무 아이템 (10차 갱신)
+
+- chain_engine.py에 `loop_termination_check()` 직접 구현 (10차 최우선)
+- nova-strategy가 체인 반복 횟수 모니터링 + HALT 신호 설계
+- noivan.env 8개 수신 → Docker 배포 체인 즉시 실행 가능
+- 커버리지 95% 달성 — 0.03%p 잔여, 테스트 1~2개 추가로 완료 가능
+
+---
+
+작성: nova-document (kanban t_a891be69) — Chain 10차
+기반: nova-learn 10차 통합 결과 (t_90beb901)

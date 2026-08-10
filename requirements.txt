@@ -11,7 +11,7 @@ anthropic>=0.100.0,<0.200.0
 cryptography>=47.0.0,<49   # Round 19: <47 상한 완화 — GHSA-p423-j2cm-9vmq/PYSEC-2026-36 패치(buffer overflow). 47.0.0+ CLEAN.
 korean-lunar-calendar==0.3.1
 pydantic==2.9.2
-PyJWT==2.12.0
+PyJWT>=2.13.0  # CVE-2026-48526 Algorithm Confusion HIGH fix
 bcrypt==4.2.0
 python-multipart>=0.0.20  # CVE-2025-54121 DoS 패치
 httpx==0.27.2

@@ -279,6 +279,147 @@ def get_daewoon(year, month, day, hour=12, is_male=True):
 
 
 # ─────────────────────────────────────────────
+# 5-1. 세운(歲運) 계산
+# 노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10) 통합 작업의 일환
+# ─────────────────────────────────────────────
+
+def get_sewoon(start_year: int, count: int) -> list[dict]:
+    """
+    연도별 세운(歲運) 간지를 계산한다.
+
+    calc_year_pillar()(src/engine/saju_calculator.py)와 동일한 60갑자 순환
+    규칙을 사용한다: stem_idx = (year - 4) % 10, branch_idx = (year - 4) % 12.
+    이는 년주(年柱) 계산과 완전히 동일한 규칙이며 (예: 2024년 = 갑진년),
+    lunar-python 없이도 절기와 무관하게 정확한 연간지를 순환 계산할 수 있다.
+
+    Args:
+        start_year: 세운표 시작 연도 (양력)
+        count: 계산할 연도 수 (예: STANDARD=5, DEEP=20)
+
+    Returns dict list:
+        [{"year": int, "stem_idx": int, "branch_idx": int,
+          "glyph": "甲辰", "reading": "갑진"}, ...]
+    """
+    if count < 0:
+        raise ValueError(f"count는 0 이상이어야 합니다: {count}")
+    result = []
+    for i in range(count):
+        y = start_year + i
+        stem_idx = (y - 4) % 10
+        branch_idx = (y - 4) % 12
+        result.append({
+            "year": y,
+            "stem_idx": stem_idx,
+            "branch_idx": branch_idx,
+            "glyph": HEAVENLY_STEMS[stem_idx] + EARTHLY_BRANCHES[branch_idx],
+            "reading": STEM_KR[stem_idx] + BRANCH_KR[branch_idx],
+        })
+    return result
+
+
+# ─────────────────────────────────────────────
+# 5-2. 신살(神殺) 계산 — 보조 지표
+# 격국·용신·조후보다 우선하지 않는 보조 참고 정보로만 사용한다.
+# 노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10) 통합 작업의 일환
+# ─────────────────────────────────────────────
+
+# 도화살(桃花殺): 년지 또는 일지 삼합 그룹 기준 → 지정된 지지가 있으면 성립
+# 삼합 그룹: 申子辰(水局)→酉, 巳酉丑(金局)→午, 寅午戌(火局)→卯, 亥卯未(木局)→子
+_DOHWA_TABLE = {
+    "申": "酉", "子": "酉", "辰": "酉",
+    "巳": "午", "酉": "午", "丑": "午",
+    "寅": "卯", "午": "卯", "戌": "卯",
+    "亥": "子", "卯": "子", "未": "子",
+}
+
+# 역마살(驛馬殺): 년지 또는 일지 삼합 그룹 기준 → 지정된 지지가 있으면 성립
+_YEOKMA_TABLE = {
+    "申": "寅", "子": "寅", "辰": "寅",
+    "巳": "亥", "酉": "亥", "丑": "亥",
+    "寅": "申", "午": "申", "戌": "申",
+    "亥": "巳", "卯": "巳", "未": "巳",
+}
+
+# 천을귀인(天乙貴人): 일간(日干) 기준 → 해당 지지가 사주 내 있으면 성립
+_CHEONEUL_TABLE = {
+    "甲": ["丑", "未"], "戊": ["丑", "未"], "庚": ["丑", "未"],
+    "乙": ["子", "申"], "己": ["子", "申"],
+    "丙": ["亥", "酉"], "丁": ["亥", "酉"],
+    "壬": ["卯", "巳"], "癸": ["卯", "巳"],
+    "辛": ["寅", "午"],
+}
+
+
+def get_sinsal(eight_char: dict) -> dict:
+    """
+    사주팔자에서 신살(神殺) 중 도화살·역마살·천을귀인 3종을 전통 계산 규칙으로 계산한다.
+
+    ⚠ 신살은 보조 지표다. 격국·용신·조후 해석보다 우선하지 않으며,
+    신살 하나만으로 사고·질병·이별·성공/불행을 단정하지 않는다
+    (노이반 제공 전통 명리학 통합 해석 프롬프트, docs/saju_classical_prompt_full_source.md §7-5 참조).
+
+    Args:
+        eight_char: get_saju()['eight_char'] 반환값
+
+    Returns dict:
+        도화살: {"present": bool, "basis": str, "note": str}
+        역마살: {"present": bool, "basis": str, "note": str}
+        천을귀인: {"present": bool, "basis": str, "note": str}
+        미구현: list[str] — 아직 계산 규칙이 구현되지 않은 항목명
+        disclaimer: str
+    """
+    year_branch = eight_char.get("year_pillar", {}).get("glyph", "")[1:]
+    day_branch = eight_char.get("day_pillar", {}).get("glyph", "")[1:]
+    day_stem = eight_char.get("day_pillar", {}).get("glyph", "")[:1]
+    all_branches = []
+    for key in ("year_pillar", "month_pillar", "day_pillar", "hour_pillar"):
+        g = eight_char.get(key, {}).get("glyph", "")
+        if len(g) == 2:
+            all_branches.append(g[1])
+
+    def _dohwa():
+        target = _DOHWA_TABLE.get(year_branch) or _DOHWA_TABLE.get(day_branch)
+        present = target is not None and target in all_branches
+        return {
+            "present": present,
+            "basis": "년지/일지 삼합 기준" if target else "판독 불가(지지 정보 부족)",
+            "note": "도화살은 매력·인기·감정기복 경향의 상징적 표현입니다. "
+                    "이 신살 하나로 이성 문제나 사건을 단정하지 않습니다.",
+        }
+
+    def _yeokma():
+        target = _YEOKMA_TABLE.get(year_branch) or _YEOKMA_TABLE.get(day_branch)
+        present = target is not None and target in all_branches
+        return {
+            "present": present,
+            "basis": "년지/일지 삼합 기준" if target else "판독 불가(지지 정보 부족)",
+            "note": "역마살은 이동·변화·활동성 경향의 상징적 표현입니다. "
+                    "이 신살 하나로 사고나 이별을 단정하지 않습니다.",
+        }
+
+    def _cheoneul():
+        targets = _CHEONEUL_TABLE.get(day_stem, [])
+        present = any(t in all_branches for t in targets)
+        return {
+            "present": present,
+            "basis": f"일간({day_stem}) 기준 천을귀인 지지: {targets}" if targets else "판독 불가(일간 정보 부족)",
+            "note": "천을귀인은 조력자·귀인운 경향의 상징적 표현입니다. "
+                    "이 신살 하나로 성공/불행을 단정하지 않습니다.",
+        }
+
+    return {
+        "도화살": _dohwa(),
+        "역마살": _yeokma(),
+        "천을귀인": _cheoneul(),
+        "미구현": ["문창귀인", "괴강살", "백호살", "양인살", "귀문관살", "화개살", "홍염살", "십이운성"],
+        "disclaimer": (
+            "신살은 격국·용신·조후 해석보다 우선하지 않는 보조 지표입니다. "
+            "신살 하나만으로 사고·질병·이별·성공/불행을 단정할 수 없습니다."
+        ),
+    }
+
+
+# ─────────────────────────────────────────────
 # 6. 감정 체크인 연동
 # ─────────────────────────────────────────────
 

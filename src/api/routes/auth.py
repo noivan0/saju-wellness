@@ -171,8 +171,15 @@ def get_me(current_user: dict = Depends(get_current_user)):
 @router.post("/logout")
 @limiter.limit("30/minute")
 def logout(request: Request, current_user: dict = Depends(get_current_user)):
-    """로그아웃 (클라이언트 토큰 삭제 안내)"""
-    return {"message": "클라이언트에서 토큰을 삭제해주세요."}
+    """로그아웃 — [A07-REVOKE] 서버측 토큰 즉시 무효화 + 클라이언트 삭제 안내"""
+    user_id = current_user["user_id"]
+    payload = current_user.get("payload", {})
+    # 현재 access token 즉시 무효화
+    jti = payload.get("jti", f"{payload.get('sub', user_id)}:{payload.get('iat', 0)}")
+    exp = float(payload.get("exp", 0))
+    revoke_token(jti, exp)
+    logger.info("[AUTH][A07] 로그아웃 — access token revoke 완료: user_id=%s", user_id)
+    return {"message": "로그아웃 완료. 클라이언트에서도 토큰을 삭제해주세요.", "revoked": True}
 
 
 @router.delete("/account")

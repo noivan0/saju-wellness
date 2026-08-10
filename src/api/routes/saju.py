@@ -42,6 +42,8 @@ try:
     from saju_engine import (
         get_saju,
         get_daewoon,
+        get_sewoon,
+        get_sinsal,
         ELEMENT_SHENG,
         ELEMENT_KE,
         HEAVENLY_STEMS,
@@ -60,6 +62,10 @@ except ImportError as e:
     _ENGINE_ERR = str(e)
     # 폴백 상수 — 엔진 로드 실패 시에도 타입 오류 방지
     def get_saju(*args, **kwargs):  # noqa: E302
+        raise RuntimeError("saju_engine not available")  # type: ignore[return-value]
+    def get_sewoon(*args, **kwargs):
+        raise RuntimeError("saju_engine not available")  # type: ignore[return-value]
+    def get_sinsal(*args, **kwargs):
         raise RuntimeError("saju_engine not available")  # type: ignore[return-value]
     HEAVENLY_STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
     EARTHLY_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
@@ -1425,3 +1431,153 @@ def get_saju_history(
         import logging as _log
         _log.warning(f"[SajuHistory] DB 조회 실패: {e}")
         return {"session_id": session_id, "history": [], "count": 0}
+
+
+# ─────────────────────────────────────────────
+# 정밀 사주 풀이 (DEEP READING) — 자평진전/적천수/궁통보감 3대 고전 통합 해석
+# 출처: 노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)
+# 기존 /calculate·/daily-energy(일일 운세) 플로우와는 완전 별도의 신규 기능.
+# ─────────────────────────────────────────────
+
+_DEEP_READING_SEWOON_YEARS = {
+    "QUICK": 0,     # QUICK 모드는 세운표 생략 (9단계 핵심만)
+    "STANDARD": 5,  # 향후 5년 세운표
+    "DEEP": 20,     # 향후 20년 세운표
+}
+
+
+@router.post("/deep-reading")
+@limiter.limit("5/minute")
+def deep_reading(
+    request: Request,
+    body: BirthInfo,
+    mode: str = Query("STANDARD", pattern="^(QUICK|STANDARD|DEEP)$",
+                       description="해석 깊이: QUICK|STANDARD|DEEP (기본 STANDARD)"),
+    sewoon_years: Optional[int] = Query(
+        None, ge=0, le=30,
+        description="향후 세운 계산 연수 (미지정 시 모드별 기본값: QUICK=0/STANDARD=5/DEEP=20)"
+    ),
+):
+    """
+    정밀 사주 풀이(DEEP READING) — 3대 고전(자평진전/적천수/궁통보감) 통합 해석.
+
+    - 사주팔자/대운/세운/신살은 전부 서버(saju_engine.py)가 계산한 값만 사용하며
+      LLM에게 절기·대운·세운·신살 재계산을 위임하지 않는다.
+    - 신살은 격국·용신·조후보다 우선하지 않는 보조 지표로만 프롬프트에 주입된다.
+    - AI 미가용(ANTHROPIC_API_KEY 없음) 시에도 500 대신 계산 데이터만 반환한다
+      (기존 _AI_OK graceful degradation 패턴 준수).
+    - 출처: 노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)
+    """
+    if not _ENGINE_OK:
+        raise HTTPException(status_code=500, detail=f"사주 엔진 로드 실패: {_ENGINE_ERR}")
+
+    try:
+        result = get_saju(body.birth_year, body.birth_month, body.birth_day, hour=body.birth_hour)
+    except Exception:
+        raise HTTPException(status_code=400, detail="사주 계산 중 오류가 발생했습니다. 입력값을 확인해주세요.")
+
+    ec = result["eight_char"]
+    is_male = (body.gender != "female")
+
+    # 대운 (검증된 엔진 그대로 재사용 — 재구현 금지)
+    try:
+        daewoon_list = get_daewoon(
+            body.birth_year, body.birth_month, body.birth_day,
+            hour=body.birth_hour if body.birth_hour is not None else 12,
+            is_male=is_male,
+        )
+        if daewoon_list and isinstance(daewoon_list[0], dict) and "error" in daewoon_list[0]:
+            daewoon_list = []
+    except Exception:
+        daewoon_list = []
+
+    # 세운 — 해석 기준일(오늘 KST 연도)부터 모드별 연수만큼
+    today = _kst_today()
+    resolved_years = sewoon_years if sewoon_years is not None else _DEEP_READING_SEWOON_YEARS.get(mode, 5)
+    try:
+        sewoon_list = get_sewoon(today.year, resolved_years) if resolved_years > 0 else []
+    except Exception:
+        sewoon_list = []
+
+    # 신살 (보조 지표 — 도화/역마/천을귀인 최소 3종 + 미구현 명시)
+    try:
+        sinsal = get_sinsal(ec)
+    except Exception:
+        sinsal = None
+
+    # 오행 분포
+    try:
+        from saju_engine import get_five_element_distribution
+        dist = get_five_element_distribution(ec)
+        element_distribution = dist.get("counts", {})
+        element_balance = dist.get("balance", "")
+    except Exception:
+        element_distribution = {}
+        element_balance = ""
+
+    def _glyph(key: str) -> str:
+        return ec.get(key, {}).get("glyph", "")
+
+    from app.prompts.saju_deep_reading_prompt import DeepReadingContext
+
+    ctx = DeepReadingContext(
+        mode=mode,
+        birth_year=body.birth_year,
+        birth_month=body.birth_month,
+        birth_day=body.birth_day,
+        birth_hour=body.birth_hour,
+        gender=body.gender,
+        lang=body.lang,
+        as_of_date=today.isoformat(),
+        year_pillar=_glyph("year_pillar"),
+        month_pillar=_glyph("month_pillar"),
+        day_pillar=_glyph("day_pillar"),
+        hour_pillar=_glyph("hour_pillar") if body.birth_hour is not None else "",
+        hour_confirmed="확정" if body.birth_hour is not None else "모름",
+        element_distribution=element_distribution,
+        element_balance=element_balance,
+        daewoon_list=daewoon_list,
+        sewoon_list=sewoon_list,
+        sinsal=sinsal,
+    )
+
+    computed_data = {
+        "eight_char": ec,
+        "daewoon": daewoon_list,
+        "sewoon": sewoon_list,
+        "sinsal": sinsal,
+        "element_distribution": element_distribution,
+        "element_balance": element_balance,
+    }
+
+    if not _AI_OK:
+        return {
+            "ai": {},
+            "mode": mode,
+            "computed": computed_data,
+            "note": "AI 해석 서비스 비활성화 — 서버 계산 데이터만 반환합니다.",
+            "source": "노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)",
+            "legal": "명리학 참고 정보 — 의료/심리상담/법률/투자 조언 대체 아님",
+        }
+
+    try:
+        from src.services.ai_interpreter import interpret_saju_deep
+        ai_result = interpret_saju_deep(ctx, mode=mode)
+    except Exception as e:
+        import logging as _log
+        _log.warning(f"[SajuDeepReading] AI 해석 실패: {e}")
+        ai_result = {
+            "text": "",
+            "mode": mode,
+            "available": False,
+            "source": "노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)",
+            "disclaimer": "AI 해석을 생성하지 못했습니다. 서버 계산 데이터를 참고하세요.",
+        }
+
+    return {
+        "ai": ai_result,
+        "mode": mode,
+        "computed": computed_data,
+        "source": "노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)",
+        "legal": "명리학 참고 정보 — 의료/심리상담/법률/투자 조언 대체 아님",
+    }

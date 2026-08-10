@@ -300,3 +300,60 @@ JSON 형식으로만:
 def interpret_compatibility_api(pillars_a: dict, pillars_b: dict, score: int, relation: str) -> dict:
     """상성보기(API 기반 궁합) 해석"""
     return interpret_compatibility(pillars_a, pillars_b, score, relation)
+
+
+# ─────────────────────────────────────────────
+# 정밀 사주 풀이 (DEEP READING) — 3대 고전 통합 해석
+# 출처: 노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)
+# ─────────────────────────────────────────────
+
+# 모드별 max_tokens — DEEP은 1~10단계 전체 상세 + 20년 세운표까지 다루므로 상향
+DEEP_READING_MAX_TOKENS = {
+    "QUICK": 1500,
+    "STANDARD": 3000,
+    "DEEP": 6000,
+}
+
+
+def interpret_saju_deep(ctx, mode: str = "STANDARD") -> dict:
+    """
+    정밀 사주 풀이(DEEP READING) — 자평진전/적천수/궁통보감 3대 고전 통합 해석.
+
+    app.prompts.saju_deep_reading_prompt.build_deep_reading_prompt(ctx)로 생성한
+    시스템/사용자 프롬프트를 기존 _call_ai() 공통 함수(anthropic 클라이언트,
+    ANTHROPIC_API_KEY 없으면 client=None graceful degradation)로 호출한다.
+
+    캐시는 사용하지 않는다 — DEEP READING은 개인화 맥락(현재 고민/관심분야 등)이
+    많아 재사용 가치가 낮다.
+
+    Args:
+        ctx: app.prompts.saju_deep_reading_prompt.DeepReadingContext
+        mode: "QUICK" | "STANDARD" | "DEEP" (기본 STANDARD)
+
+    Returns dict:
+        text        - AI 응답 원문 (자유 서술형, JSON 아님)
+        mode        - 실제 사용된 모드
+        available   - bool, AI 클라이언트 사용 가능 여부
+        source      - 출처 표기 (노이반 제공 전통 명리학 통합 해석 프롬프트)
+        disclaimer  - 법적 고지
+    """
+    from app.prompts.saju_deep_reading_prompt import build_deep_reading_prompt, VALID_MODES
+
+    resolved_mode = mode if mode in VALID_MODES else "STANDARD"
+    ctx.mode = resolved_mode
+
+    prompt = build_deep_reading_prompt(ctx)
+    max_tokens = DEEP_READING_MAX_TOKENS.get(resolved_mode, 3000)
+
+    text = _call_ai(prompt["user"], system=prompt["system"], max_tokens=max_tokens)
+
+    return {
+        "text": text,
+        "mode": resolved_mode,
+        "available": bool(text),
+        "source": "노이반 제공 전통 명리학 통합 해석 프롬프트 (2026-08-10)",
+        "disclaimer": (
+            "이 해석은 전통 명리학의 상징 체계에 따른 참고 관점이며, 중요한 현실 "
+            "결정은 사실 정보와 전문 조언을 함께 검토해야 합니다."
+        ),
+    }

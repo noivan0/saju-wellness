@@ -2,12 +2,13 @@
 사주담 FastAPI 앱 엔트리
 법적: 문화·오락 서비스 / 자기이해 도구 (심리상담 아님)
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from src.api.rate_limiter import limiter
+from starlette.middleware.base import BaseHTTPMiddleware
 
 import os as _os
 
@@ -27,6 +28,48 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+# ── [P1-SECURITY] HTTP 보안 헤더 미들웨어 (OWASP A05) ─────────────────────
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    OWASP 권장 HTTP 보안 헤더 — [R13/R14-SECURITY]
+    X-Frame-Options: 클릭재킹 방지
+    X-Content-Type-Options: MIME 스니핑 방지
+    Referrer-Policy: 레퍼러 정보 최소화
+    CSP: XSS 방어
+    Cache-Control: API 응답 캐시 금지
+    HSTS: SSL 배포 후 자동 활성화
+    """
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        # [R14] CSP — script 'self' + 폰트/연결 허용
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "connect-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data:; "
+            "frame-ancestors 'none'"
+        )
+        # [R14] API 응답 캐시 금지 (개인 사주 정보 캐시 방지)
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+        # [R14] HSTS — HTTPS 환경에서만 활성화
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=63072000; includeSubDomains; preload"
+            )
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -64,7 +107,14 @@ async def privacy_policy():
 </head><body>{html_body}</body></html>""")
 
 
-@app.get("/health")
+@app.get("/ping", tags=["시스템"])
+def ping():
+    """canary 모니터링용 lightweight ping — 엔진 로드 없이 즉시 응답"""
+    import time
+    return {"status": "ok", "ts": int(time.time() * 1000)}
+
+
+@app.get("/health", tags=["시스템"])
 def health_check():
     """
     헬스체크 — 사주 계산 엔진 스모크 테스트 포함

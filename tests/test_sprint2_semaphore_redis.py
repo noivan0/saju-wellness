@@ -93,20 +93,9 @@ class TestAISemaphoreLazyInit:
         }
 
         async def _run():
-            # 타임아웃을 매우 짧게 설정하여 폴백 경로 테스트
-            import asyncio as _aio
-            original = _aio.timeout
-
-            async def _patched_gen():
-                # TimeoutError 강제 발생
-                async def _raise():
-                    raise asyncio.TimeoutError()
-                return await _raise()
-
-            # 직접 TimeoutError 경로 테스트
+            # [PY310-COMPAT] asyncio.timeout()은 3.11+ 전용 — 3.10 환경에서는 없음.
+            # 폴백 경로(내부 asyncio.wait_for 기반) 자체를 직접 호출해 검증한다.
             try:
-                # generate_daily_insight_async는 내부적으로 timeout(15) 사용
-                # asyncio.timeout을 monkeypatch하는 대신 direct call
                 result = await mod.generate_daily_insight_async(
                     saju_data, "테스트", "ko"
                 )

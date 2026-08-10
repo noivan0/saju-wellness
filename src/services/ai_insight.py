@@ -143,13 +143,17 @@ async def generate_daily_insight_async(
     [R21-SEM-001] asyncio.timeout(30) — Semaphore 무한 대기 방지.
     """
     try:
-        async with asyncio.timeout(15):  # [R21-SEM-001][R77-PERF-001] 15초 상한 (30→15, P95<3s SLO 목표)
+        # [PY310-COMPAT] asyncio.timeout()는 Python 3.11+ 전용 — 이 서버는 3.10 운영 중.
+        # asyncio.wait_for()로 대체(3.8+ 호환). 세마포어 획득까지 포함해 15초 상한 유지.
+        async def _run():
             async with _get_semaphore():
                 loop = asyncio.get_running_loop()
                 return await loop.run_in_executor(
                     None, lambda: generate_daily_insight(saju_data, user_message, lang)
                 )
-    except TimeoutError:
+        # [R21-SEM-001][R77-PERF-001] 15초 상한 (30→15, P95<3s SLO 목표)
+        return await asyncio.wait_for(_run(), timeout=15)
+    except (TimeoutError, asyncio.TimeoutError):
         return {
             "insight": "AI 서비스가 일시적으로 지연되고 있습니다. 잠시 후 다시 시도해주세요.",
             "element": "unknown",
