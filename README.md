@@ -1,32 +1,43 @@
-# 사주담 (Saju-Wellness) — AI 명리학 사주 서비스
+# 사주담 (Sajudam)
 
-> 사주팔자(四柱八字) 계산 + Claude AI 상세 해석 + 운세달력 + 궁합 분석
-
----
-
-## 화면 구성
-
-| 탭 | 설명 |
-|----|------|
-| 나의 사주 | 생년월일시 입력 → 년주/월주/일주/시주 + AI 상세 해석 |
-| 오늘의 에너지 | 일주 × 오늘 일진 교차 분석 + AI 에너지 해석 |
-| 궁합 | 두 사람의 오행 관계 분석 |
-| 상성보기 | API 기반 궁합 상세 분석 + AI 해석 |
-| 운세달력 | 월별 운세 + 일자별 달력 클릭 상세보기 |
+> **MVP / Alpha** — AI 사주팔자 + 감정 코칭 서비스. 20–40대 한국 여성 타겟.
 
 ---
 
-## 기술 스택
+## 🇰🇷 소개 | 🇺🇸 Overview
 
-- **백엔드**: Python + FastAPI
-- **사주 엔진**: `saju_engine.py` (60갑자, 절기 기반)
-- **음력 변환**: `korean-lunar-calendar` (KASI 기반)
-- **AI 해석**: Claude API (`src/services/ai_interpreter.py`)
-- **프론트엔드**: Vanilla JS (다크 테마 SPA)
+**[한글]**
+사주팔자 기반 AI 운세 해석과 감정 코칭을 결합한 서비스입니다.
+단순한 운세 풀이를 넘어, 사용자의 감정 상태를 이해하고 동양 인문학적 시각으로 위로와 방향을 제시합니다.
+
+**[English]**
+Sajudam combines traditional Korean Four Pillars (Saju) astrology with AI-powered emotional coaching.
+Beyond fortune-telling, it understands the user's emotional state and provides comfort and direction through an Eastern humanistic lens.
 
 ---
 
-## 빠른 시작
+## ✨ Key Features
+
+| Feature | Description |
+|---|---|
+| 🔮 AI Saju Reading | Four Pillars analysis with personalized narrative — not template-based |
+| 💬 Emotional Coaching | Sentiment-aware responses that adapt to user's emotional state |
+| 🎁 Free Event Mode | Admin-managed free coaching events for community building |
+| 🌏 Multilingual | Korean · Japanese · English — independent per-language builds |
+| 🔒 Security | JWT HttpOnly/SameSite=Strict — CRITICAL 0 / HIGH 0 (NOVA audit certified) |
+| 📊 SSE Push | Real-time streaming response via Server-Sent Events |
+
+---
+
+## 🧠 Design Principles
+
+- **Maslach framework** — Emotional burnout detection patterns to tailor coaching depth
+- **Eastern humanism** — Responses grounded in Korean/Chinese philosophical traditions (음양오행)
+- **Dark mystique UX** — Deep indigo palette evoking cosmic, contemplative atmosphere
+
+---
+
+## 🚀 Quick Start
 
 ### 1. 의존성 설치
 
@@ -68,7 +79,19 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 8002
 
 ---
 
-## 주요 API
+## 🛠 Tech Stack
+
+```
+Backend   FastAPI · PostgreSQL · Redis · Anthropic Claude API
+Auth      JWT (HttpOnly Cookie, SameSite=Strict)
+Frontend  React · SSE streaming
+Infra     Docker · async architecture
+Security  OWASP LLM Top 10 · CRITICAL 0 / HIGH 0 (NOVA audit certified)
+```
+
+---
+
+## 📡 API Endpoints
 
 | 메서드 | 경로 | 설명 | 인증 |
 |--------|------|------|------|
@@ -102,37 +125,29 @@ curl -X POST http://localhost:8002/api/saju/calculate \
   }'
 ```
 
-응답에 `interpretation.ai` 필드로 AI 상세 해석이 포함됩니다.
+---
+
+## 📱 App Preview
+
+> MVP — UI design tokens defined. Core API complete.
+
+**Design System**
+- Background: `#0F0A1E` (Deep indigo — cosmic atmosphere)
+- Primary: `#8B5CF6` (Violet — mystique & wisdom)
+- Accent: `#F59E0B` (Amber — Eastern warmth)
+- Font: Pretendard
 
 ---
 
-## 사주 엔진 정확도
+## 📌 Status
 
-| 항목 | 방법 | 정확도 |
-|------|------|--------|
-| 음력 변환 | KASI 기반 (korean-lunar-calendar) | ✅ 최고 |
-| 연주 | 입춘 기준 정확 계산 | ✅ |
-| 일주 | JDN(율리우스 통일적일) 기반 | ✅ |
-| 시주 | 오자환원법 (2시간 배당) | ✅ |
-| 월주 | 절기 기준 | ✅ |
-
-### 12지시 2시간 배당 (KST 기준)
 ```
-子자시 23:00~01:00  |  午오시 11:00~13:00
-丑축시 01:00~03:00  |  未미시 13:00~15:00
-寅인시 03:00~05:00  |  申신시 15:00~17:00
-卯묘시 05:00~07:00  |  酉유시 17:00~19:00
-辰진시 07:00~09:00  |  戌술시 19:00~21:00
-巳사시 09:00~11:00  |  亥해시 21:00~23:00
-```
-
----
-
-## Docker로 실행
-
-```bash
-docker build -t saju-wellness .
-docker run -p 8002:8002 --env-file .env saju-wellness
+✅ Saju calculation engine complete
+✅ AI coaching API complete
+✅ Security audit passed (CRITICAL 0 / HIGH 0)
+✅ Multilingual architecture designed (KO / JA / EN)
+🔧 Frontend MVP in progress
+⏳ Pending: .env credentials for deployment
 ```
 
 ---
@@ -214,3 +229,10 @@ docker run -p 8002:8002 --env-file .env saju-wellness
 ## 라이선스
 
 Private — 노이반 프로젝트
+
+---
+
+## 🔗 Related
+
+- [NOVA OSS](https://github.com/noivan0/NOVA) — Agent framework powering this app
+- [noivan0 Portfolio](https://noivan0.github.io/noivan-portfolio/)
