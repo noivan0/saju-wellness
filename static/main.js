@@ -694,7 +694,8 @@ async function calcEnergy() {
     const res = await fetch(API + '/api/saju/daily-energy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth_year: year, birth_month: month, birth_day: day, lang: 'ko' })
+      body: JSON.stringify({ birth_year: year, birth_month: month, birth_day: day, lang: 'ko' }),
+      signal: AbortSignal.timeout(75000)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '오류');
@@ -819,17 +820,111 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function _drEscapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function _drInlineMd(s) {
+  // 인라인 마크다운: **볼드**, *이탤릭*
+  return s
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+}
+
+function _drIsSepLine(line) {
+  // 마크다운 표 구분선(|---|:---:|---:|) 판정 — 셀 단위 분해 후 각 셀을 짧은
+  // 정규식으로 검사해 ReDoS(중첩 quantifier 백트래킹)를 원천 차단한다.
+  // (과거 /^\s*\|?[\s:-]*-[\s:|-]*\|?\s*$/ 는 60000자 입력에서 2.5초,
+  // 160000자에서 17.6초까지 걸리는 지수적 백트래킹이 실증됨 — 2026-08-11 감사)
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  let l = trimmed;
+  if (l.startsWith('|')) l = l.slice(1);
+  if (l.endsWith('|')) l = l.slice(0, -1);
+  const cells = l.split('|');
+  if (cells.length === 0) return false;
+  return cells.every(c => /^:?-+:?$/.test(c.trim()));
+}
+
+function _drParseTableBlock(lines, startIdx) {
+  // lines[startIdx]가 헤더 행(|...|), lines[startIdx+1]이 구분선(|---|---|)인지 확인
+  const headerLine = lines[startIdx];
+  const sepLine = lines[startIdx + 1];
+  if (!headerLine || !sepLine) return null;
+  if (!/^\s*\|?.*\|.*\|?\s*$/.test(headerLine)) return null;
+  if (!_drIsSepLine(sepLine)) return null;
+
+  const splitRow = (line) => {
+    let l = line.trim();
+    if (l.startsWith('|')) l = l.slice(1);
+    if (l.endsWith('|')) l = l.slice(0, -1);
+    return l.split('|').map(c => c.trim());
+  };
+
+  const headers = splitRow(headerLine);
+  let i = startIdx + 2;
+  const rows = [];
+  while (i < lines.length && /\|/.test(lines[i]) && lines[i].trim() !== '') {
+    rows.push(splitRow(lines[i]));
+    i++;
+  }
+
+  let html = '<div class="dr-table-wrap"><table class="dr-table"><thead><tr>';
+  headers.forEach(h => { html += `<th>${_drInlineMd(_drEscapeHtml(h))}</th>`; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += '<tr>';
+    headers.forEach((_, ci) => { html += `<td>${_drInlineMd(_drEscapeHtml(r[ci] || ''))}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  return { html, nextIdx: i };
+}
+
 function _drSimpleMarkdownToHtml(text) {
-  // 최소한의 마크다운 → HTML 변환 (##, **, 줄바꿈)
-  let html = text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.*)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-  return `<p>${html}</p>`;
+  // 표(|...|) 블록을 우선 검출해 <table>로, 나머지는 헤더/볼드/문단으로 변환
+  const rawLines = String(text).replace(/\r\n/g, '\n').split('\n');
+  const blocks = [];
+  let paraBuf = [];
+
+  const flushPara = () => {
+    if (!paraBuf.length) return;
+    const joined = paraBuf.join('\n').trim();
+    if (joined) {
+      const withBr = _drInlineMd(_drEscapeHtml(joined)).replace(/\n/g, '<br>');
+      blocks.push(`<p>${withBr}</p>`);
+    }
+    paraBuf = [];
+  };
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const h3 = line.match(/^### (.*)$/);
+    const h2 = line.match(/^## (.*)$/);
+    const h1 = line.match(/^# (.*)$/);
+    if (h3 || h2 || h1) {
+      flushPara();
+      const tag = h1 ? 'h1' : h2 ? 'h2' : 'h3';
+      const content = (h1 || h2 || h3)[1];
+      blocks.push(`<${tag}>${_drInlineMd(_drEscapeHtml(content))}</${tag}>`);
+      continue;
+    }
+    // 표 검출: 현재 줄+다음 줄이 헤더/구분선 패턴이면 표 블록으로 파싱
+    if (line.includes('|') && rawLines[i + 1] && _drIsSepLine(rawLines[i + 1])) {
+      const parsed = _drParseTableBlock(rawLines, i);
+      if (parsed) {
+        flushPara();
+        blocks.push(parsed.html);
+        i = parsed.nextIdx - 1;
+        continue;
+      }
+    }
+    paraBuf.push(line);
+  }
+  flushPara();
+
+  return blocks.join('\n');
 }
 
 async function calcDeepReading() {
@@ -862,8 +957,13 @@ async function calcDeepReading() {
     const body = { birth_year: year, birth_month: month, birth_day: day, gender };
     if (hourVal !== '') body.birth_hour = +hourVal;
 
-    // STANDARD/DEEP은 최대 5분까지 소요될 수 있어 클라이언트 타임아웃을 넉넉히 잡음
-    const clientTimeoutMs = mode === 'DEEP' ? 330000 : mode === 'STANDARD' ? 300000 : 180000;
+    // QUICK은 프롬프트 압축으로 짧아졌으나 여유를 둠. STANDARD/DEEP은 최대 5분까지
+    // 소요될 수 있어 클라이언트 타임아웃을 넉넉히 잡음(서버 timeout보다 항상 크게).
+    // 서버측 DEEP_READING_TIMEOUT(ai_interpreter.py): QUICK=180s, STANDARD=420s, DEEP=500s
+    // 2026-08-11 감사: STANDARD(300s<420s), DEEP(330s<500s)로 역전돼 있어 서버가
+    // 아직 응답 중인데 클라이언트가 먼저 타임아웃 처리하는 버그였음 — 서버값보다
+    // 확실히 크게(+30~40s 버퍼) 재조정.
+    const clientTimeoutMs = mode === 'DEEP' ? 540000 : mode === 'STANDARD' ? 450000 : 210000;
 
     const res = await fetch(API + `/api/saju/deep-reading?mode=${mode}`, {
       method: 'POST',
@@ -887,12 +987,11 @@ async function calcDeepReading() {
       container.innerHTML = _drSimpleMarkdownToHtml(aiText);
     } else if (typeof data.ai === 'object' && data.ai) {
       // ai가 구조화 객체인 경우 각 필드를 순회 출력 (방어적 fallback — 이스케이프 필수)
-      const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       let html = '';
       Object.entries(data.ai).forEach(([k, v]) => {
         if (!v) return;
-        const safeVal = typeof v === 'string' ? _escHtml(v) : _escHtml(JSON.stringify(v));
-        html += `<div style="margin-bottom:14px"><div style="font-size:.75rem;color:var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">${_escHtml(k)}</div><div>${safeVal}</div></div>`;
+        const safeVal = typeof v === 'string' ? _drEscapeHtml(v) : _drEscapeHtml(JSON.stringify(v));
+        html += `<div style="margin-bottom:14px"><div style="font-size:.75rem;color:var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">${_drEscapeHtml(k)}</div><div>${safeVal}</div></div>`;
       });
       container.innerHTML = html || '<p style="color:var(--ink-faint)">해석 결과를 표시할 수 없습니다.</p>';
     } else {
@@ -960,7 +1059,8 @@ async function calcCompatibility() {
     const res = await fetch(API + '/api/saju/compatibility', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ person_a: personA, person_b: personB })
+      body: JSON.stringify({ person_a: personA, person_b: personB }),
+      signal: AbortSignal.timeout(110000)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '오류');

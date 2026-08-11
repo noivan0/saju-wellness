@@ -193,8 +193,16 @@ select option { background: var(--bg-elevated-2); color: var(--ink); }
 .deep-hero { position: relative; overflow: hidden; }
 .deep-hero-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .classic-badge { font-size: .6875rem; padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: 50px; color: var(--gold); font-family: var(--font-serif); }
-.deep-reading-body { font-size: .9375rem; line-height: 1.85; color: var(--ink); white-space: pre-wrap; }
-.deep-reading-body h1, .deep-reading-body h2, .deep-reading-body h3 { font-family: var(--font-serif); color: var(--gold); margin: 18px 0 8px; font-size: 1.05rem; }
+.deep-reading-body { font-size: .9375rem; line-height: 1.85; color: var(--ink); }
+.deep-reading-body p { margin: 0 0 14px; }
+.deep-reading-body h1, .deep-reading-body h2, .deep-reading-body h3 { font-family: var(--font-serif); color: var(--gold); margin: 22px 0 10px; font-size: 1.05rem; }
+.deep-reading-body h1:first-child, .deep-reading-body h2:first-child, .deep-reading-body h3:first-child { margin-top: 0; }
+.dr-table-wrap { overflow-x: auto; margin: 4px 0 16px; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: var(--radius); }
+.dr-table { width: 100%; border-collapse: collapse; font-size: .8125rem; white-space: nowrap; }
+.dr-table th, .dr-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: normal; min-width: 72px; }
+.dr-table th { background: var(--bg-elevated-2); color: var(--gold); font-family: var(--font-serif); font-weight: 700; white-space: nowrap; }
+.dr-table tr:last-child td { border-bottom: none; }
+.dr-table tbody tr:nth-child(even) { background: rgba(245,240,230,.02); }
 .rate-limit-notice { text-align: center; padding: 14px; background: rgba(184,105,90,.08); border: 1px solid rgba(184,105,90,.25); border-radius: var(--radius); color: var(--fire); font-size: .875rem; }
 
 /* ── 모바일 하단 네비 ── */

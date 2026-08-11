@@ -199,7 +199,7 @@ JSON 형식으로만 답변:
   "career_direction": "적성/진로 (1~2문장)",
   "year_2026": "2026년 흐름 (1문장)"
 }}"""
-    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1200)
+    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1500, timeout=60.0)
     if raw:
         _saju_full_cache[cache_key] = raw
         if len(_saju_full_cache) > 60:
@@ -258,14 +258,15 @@ def interpret_energy_today(pillars: dict, today_pillar: dict) -> dict:
 【오늘 날짜 정보】
 - 오늘 일진: {today} (오행: {today_el})
 
-다음을 구체적으로 2~3문장씩 해석해주세요:
+다음을 구체적으로 2~3문장(100자 이내)씩 간결하게 해석해주세요. 전체 응답은
+1000자 이내로 완결하고, 마지막 daily_message 필드까지 반드시 채우세요.
 
 1. **오늘의 에너지 흐름** (내 일주와 오늘 일진의 상호작용)
-2. **추천 활동** (오늘 하면 좋은 것 3가지, 이유 포함)
+2. **추천 활동** (오늘 하면 좋은 것, 항목당 30자 이내로 3가지)
 3. **주의할 점** (오늘 피해야 할 상황이나 행동)
-4. **오늘의 한마디** (짧고 강렬한 오늘 메시지, 20자 이내)
+4. **오늘의 한마디** (짧고 강렬한 오늘 메시지, 20자 이내, 반드시 포함)
 
-JSON 형식으로만:
+JSON 형식으로만, 다른 설명 없이:
 {{
   "energy_flow": "...",
   "recommended_activities": ["...", "...", "..."],
@@ -273,7 +274,7 @@ JSON 형식으로만:
   "daily_message": "..."
 }}"""
 
-    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=700)
+    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=1200, timeout=60.0)
     if not raw:
         return {}
     
@@ -301,16 +302,18 @@ def interpret_compatibility(pillars_a: dict, pillars_b: dict, score: int, relati
 - 궁합 점수: {score}점
 - 오행 관계: {relation} ({a_el} ↔ {b_el})
 
-다음을 각각 2~3문장으로 구체적으로 분석해주세요:
+다음을 각각 2~3문장(120자 이내)으로 간결하게 분석해주세요. 전체 응답은 반드시
+1500자 이내로 완결하고, 각 필드는 중간에 끊기지 않게 짧더라도 완전한 문장으로
+마무리하세요.
 
 1. **두 사람의 에너지 역학** (어떻게 서로 영향을 주고받는지)
 2. **잘 맞는 부분** (구체적 상황 예시)
 3. **갈등 가능한 부분** (왜 생기는지, 어떻게 나타나는지)
-4. **관계 발전 조언** (함께 성장하기 위한 실질적 제안 3가지)
-5. **함께하면 좋은 활동** (두 오행의 시너지를 살리는 활동)
-6. **장기적 전망** (이 관계가 가진 가능성)
+4. **관계 발전 조언** (함께 성장하기 위한 실질적 제안, 항목당 40자 이내로 3가지)
+5. **함께하면 좋은 활동** (두 오행의 시너지를 살리는 활동, 1문장)
+6. **장기적 전망** (이 관계가 가진 가능성, 1~2문장)
 
-JSON 형식으로만:
+JSON 형식으로만, 다른 설명 없이:
 {{
   "energy_dynamics": "...",
   "compatibility_strengths": "...",
@@ -320,7 +323,7 @@ JSON 형식으로만:
   "long_term_outlook": "..."
 }}"""
 
-    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=900)
+    raw = _call_ai(prompt, system=SAJU_SYSTEM, max_tokens=3000, timeout=90.0)
     if not raw:
         return {}
     
@@ -357,8 +360,12 @@ def interpret_compatibility_api(pillars_a: dict, pillars_b: dict, score: int, re
 #        3분 제한이 없음을 실측 확인(242초 자연완결, output_tokens=12828).
 #        base_url을 os.environ.get("ANTHROPIC_BASE_URL", ...)로 수정해 근본 해결.
 #        실측 결과 STANDARD가 16000에서도 정확히 소진되는 경우가 있어 여유를 더 둔다.
+#   7차(2026-08-11, 응답속도 개선): QUICK 모드 프롬프트를 1500~2500자로 대폭
+#        압축(기존엔 QUICK도 사실상 STANDARD급 10단계 전체를 요구해 355초씩
+#        걸렸음) → max_tokens/timeout도 비례 축소해 QUICK 체감 속도 개선.
+#        STANDARD/DEEP은 여전히 상세 풀이가 목적이라 기존 값 유지.
 DEEP_READING_MAX_TOKENS = {
-    "QUICK": 12000,
+    "QUICK": 5000,
     "STANDARD": 20000,
     "DEEP": 24000,
 }
@@ -366,8 +373,11 @@ DEEP_READING_MAX_TOKENS = {
 # 모드별 timeout(초) — client-side timeout. h-chat-api.autoever.com 게이트웨이는
 # 3분 제한이 없음이 확인됐으므로(위 6차 로그 참조), 실측 소요시간(QUICK 355s,
 # STANDARD 242s)에 여유를 둔 값으로 설정. 과도하게 크게 잡을 필요는 없다.
+# QUICK은 7차 프롬프트 압축(1500~2500자 목표) 이후 짧아질 것으로 예상되나,
+# 안전하게 여유를 두고 180초로 설정(기존 420초에서 축소) — 실사용 로그로
+# 추가 조정 예정.
 DEEP_READING_TIMEOUT = {
-    "QUICK": 420.0,
+    "QUICK": 180.0,
     "STANDARD": 420.0,
     "DEEP": 500.0,
 }

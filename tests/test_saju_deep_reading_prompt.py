@@ -186,11 +186,9 @@ class TestThreeClassicsIntegration:
         ctx = DeepReadingContext()
         result = build_deep_reading_prompt(ctx)
         system = result["system"]
-        assert "자평진전 관점:" in system
-        assert "적천수 관점:" in system
-        assert "궁통보감 관점:" in system
-        assert "충돌 지점:" in system
-        assert "최종 종합 판단:" in system
+        # v2(2026-08-11): 라벨-콜론 나열 대신 자연스러운 한글 소제목으로 전환
+        assert "고전 간 관점" in system
+        assert "자평진전·적천수·궁통보감" in system
 
     def test_yongsin_three_way_split_present(self):
         ctx = DeepReadingContext()
@@ -199,7 +197,8 @@ class TestThreeClassicsIntegration:
         assert "격국용신" in system
         assert "억부" in system
         assert "조후용신" in system
-        assert "[사용자용 종합 판단]" in system
+        # v2(2026-08-11): [사용자용 종합 판단] 라벨 대신 자연스러운 한글 소제목으로 전환
+        assert "세 관점을 종합한 판단" in system
 
 
 class TestFixedDisclaimerLines:
@@ -209,8 +208,9 @@ class TestFixedDisclaimerLines:
         ctx = DeepReadingContext()
         result = build_deep_reading_prompt(ctx)
         system = result["system"]
-        assert "[해석 안내]" in system
-        assert "검증된 예측·의학적 진단·법률·투자 조언이 아닙니다" in system
+        # v2(2026-08-11): [해석 안내] 대괄호 라벨 대신 자연스러운 한글 헤더로 전환
+        assert "## 해석에 앞서" in system
+        assert "검증된 예측·의학적 진단·법률·투자 조언이 아니라는 점" in system
 
     def test_closing_disclaimer_present(self):
         ctx = DeepReadingContext()
@@ -252,7 +252,8 @@ class TestModeStepDifferentiation:
         for mode in VALID_MODES:
             ctx = DeepReadingContext(mode=mode)
             result = build_deep_reading_prompt(ctx)
-            assert f"선택된 MODE({mode})" in result["user"]
+            # v2(2026-08-11): "선택된 MODE(...)" 대신 "선택된 해석 깊이(...)"로 전환
+            assert f"선택된 해석 깊이({mode})" in result["user"]
 
 
 class TestUserContextOptionalFields:
