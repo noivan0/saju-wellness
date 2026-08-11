@@ -327,9 +327,9 @@ function createStars() {
 
 // 셀렉트 초기화
 function initSelects() {
-  const yearIds = ['birth-year','dr-year','e-year','cpa-year','cpb-year','cal-year'];
-  const monthIds = ['birth-month','dr-month','e-month','cpa-month','cpb-month','cal-month'];
-  const dayIds = ['birth-day','dr-day','e-day','cpa-day','cpb-day','cal-day'];
+  const yearIds = ['birth-year','e-year','ca-year','cb-year','cpa-year','cpb-year','cal-year'];
+  const monthIds = ['birth-month','e-month','ca-month','cb-month','cpa-month','cpb-month','cal-month'];
+  const dayIds = ['birth-day','e-day','ca-day','cb-day','cpa-day','cpb-day','cal-day'];
   const currentYear = new Date().getFullYear();
 
   yearIds.forEach(id => {
@@ -496,7 +496,7 @@ function renderSaju(data) {
         <div style="height:80px;display:flex;align-items:flex-end;justify-content:center">
           <div class="element-bar-fill" style="width:32px;height:${h}px;background:${elColors[el]}"></div>
         </div>
-        <div class="element-bar-label" style="color:${elColors[el]}">${elNames[el]}<br><span style="color:var(--ink-faint)">${cnt}개</span></div>
+        <div class="element-bar-label" style="color:${elColors[el]}">${elNames[el]}<br><span style="color:var(--text-3)">${cnt}개</span></div>
       </div>`;
   });
   document.getElementById('element-chart').innerHTML = chartHTML;
@@ -515,7 +515,7 @@ function renderSaju(data) {
   // ─── AI 상세 해석 (별도 요청, 비동기) ───
   const aiContainer = document.getElementById('ai-interpretation');
   if (aiContainer) {
-    aiContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-faint);font-size:.85rem">🤖 AI 상세 해석 생성 중...</div>';
+    aiContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);font-size:.85rem">🤖 AI 상세 해석 생성 중...</div>';
     const body2 = { birth_year: +document.getElementById('birth-year').value,
                     birth_month: +document.getElementById('birth-month').value,
                     birth_day: +document.getElementById('birth-day').value,
@@ -530,11 +530,11 @@ function renderSaju(data) {
       if (aiData && aiData.ai && Object.keys(aiData.ai).length > 0) {
         renderAiInterpretation(aiData.ai, aiContainer);
       } else {
-        aiContainer.innerHTML = '<p style="color:var(--ink-faint);font-size:.85rem;text-align:center;padding:12px">AI 해석을 불러오지 못했습니다.</p>';
+        aiContainer.innerHTML = '<p style="color:var(--text-3);font-size:.85rem;text-align:center;padding:12px">AI 해석을 불러오지 못했습니다.</p>';
       }
     }).catch((err) => {
       const msg = (err && err.name === 'TimeoutError') ? '⏱️ AI 해석 응답 시간 초과' : 'AI 해석 서비스 일시 오류';
-      aiContainer.innerHTML = `<p style="color:var(--ink-faint);font-size:.85rem;text-align:center;padding:12px">${msg}</p>`;
+      aiContainer.innerHTML = `<p style="color:var(--text-3);font-size:.85rem;text-align:center;padding:12px">${msg}</p>`;
     });
   }
 }
@@ -556,28 +556,28 @@ function renderInterpretation(pillars, interpretation) {
   let pillarHTML = '';
   if (interp.personality) {
     const strengthsHTML = (interp.strengths || []).map(s => `<li style="margin-bottom:4px">✦ ${s}</li>`).join('');
-    const challengesHTML = (interp.challenges || []).map(c => `<li style="margin-bottom:4px;color:var(--ink-faint)">△ ${c}</li>`).join('');
+    const challengesHTML = (interp.challenges || []).map(c => `<li style="margin-bottom:4px;color:var(--text-3)">△ ${c}</li>`).join('');
     const careerHint = interp.element_info?.career || '';
     pillarHTML = `
-      <div style="background:var(--bg-elevated-2);border-radius:12px;padding:16px;margin-bottom:12px">
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;margin-bottom:12px">
         <div style="font-size:1rem;color:${elColor};font-family:'Noto Serif KR',serif;margin-bottom:8px">
           ${dayKey} 일주
         </div>
-        <p style="color:var(--ink);line-height:1.7;margin-bottom:12px">${interp.personality}</p>
+        <p style="color:var(--text);line-height:1.7;margin-bottom:12px">${interp.personality}</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div>
-            <div style="font-size:.8rem;color:var(--ink-muted);margin-bottom:4px">강점</div>
-            <ul style="list-style:none;font-size:.85rem;color:var(--ink)">${strengthsHTML}</ul>
+            <div style="font-size:.8rem;color:var(--text-2);margin-bottom:4px">강점</div>
+            <ul style="list-style:none;font-size:.85rem;color:var(--text)">${strengthsHTML}</ul>
           </div>
           <div>
-            <div style="font-size:.8rem;color:var(--ink-muted);margin-bottom:4px">주의</div>
+            <div style="font-size:.8rem;color:var(--text-2);margin-bottom:4px">주의</div>
             <ul style="list-style:none;font-size:.85rem">${challengesHTML}</ul>
           </div>
         </div>
-        ${careerHint ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:.83rem;color:var(--ink-muted)">${careerHint}</div>` : ''}
+        ${careerHint ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:.83rem;color:var(--text-2)">${careerHint}</div>` : ''}
       </div>`;
   } else {
-    pillarHTML = `<p style="color:var(--ink-muted);font-size:.9rem">일주 <strong style="color:var(--gold)">${dayKey}</strong>의 에너지를 지니고 있습니다.</p>`;
+    pillarHTML = `<p style="color:var(--text-2);font-size:.9rem">일주 <strong style="color:var(--gold)">${dayKey}</strong>의 에너지를 지니고 있습니다.</p>`;
   }
   document.getElementById('pillar-interpretation').innerHTML = pillarHTML;
 
@@ -589,46 +589,46 @@ function renderInterpretation(pillars, interpretation) {
       <div style="font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:12px">✦ AI 명리학 상세 분석</div>`;
 
     if (ai.core_nature) {
-      aiHTML += `<div style="background:rgba(184,147,74,.06);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:14px;margin-bottom:10px">
-        <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:6px">핵심 기질 — ${dayKey} 일주만의 특성</div>
-        <p style="color:var(--ink);line-height:1.75;font-size:.9rem">${ai.core_nature}</p>
+      aiHTML += `<div style="background:rgba(201,162,39,.06);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:14px;margin-bottom:10px">
+        <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">핵심 기질 — ${dayKey} 일주만의 특성</div>
+        <p style="color:var(--text);line-height:1.75;font-size:.9rem">${ai.core_nature}</p>
       </div>`;
     }
 
     if (ai.element_balance) {
-      aiHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:14px;margin-bottom:10px">
-        <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:6px">오행 균형 분석</div>
-        <p style="color:var(--ink);line-height:1.7;font-size:.88rem">${ai.element_balance}</p>
+      aiHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">오행 균형 분석</div>
+        <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.element_balance}</p>
       </div>`;
     }
 
     if (ai.relationship_style) {
-      aiHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:14px;margin-bottom:10px">
-        <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:6px">인간관계 스타일</div>
-        <p style="color:var(--ink);line-height:1.7;font-size:.88rem">${ai.relationship_style}</p>
+      aiHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">인간관계 스타일</div>
+        <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.relationship_style}</p>
       </div>`;
     }
 
     if (ai.career_direction) {
-      aiHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:14px;margin-bottom:10px">
-        <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:6px">적성과 진로 방향</div>
-        <p style="color:var(--ink);line-height:1.7;font-size:.88rem">${ai.career_direction}</p>
+      aiHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">적성과 진로 방향</div>
+        <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.career_direction}</p>
       </div>`;
     }
 
     if (ai.year_2026) {
-      aiHTML += `<div style="background:rgba(184,147,74,.08);border:1px solid rgba(184,147,74,.3);border-radius:10px;padding:14px;margin-bottom:10px">
+      aiHTML += `<div style="background:rgba(201,162,39,.08);border:1px solid rgba(201,162,39,.3);border-radius:10px;padding:14px;margin-bottom:10px">
         <div style="font-size:.72rem;color:var(--gold);font-weight:600;margin-bottom:6px">📅 2026년 흐름</div>
-        <p style="color:var(--ink);line-height:1.7;font-size:.88rem">${ai.year_2026}</p>
+        <p style="color:var(--text);line-height:1.7;font-size:.88rem">${ai.year_2026}</p>
       </div>`;
     }
 
     if (ai.growth_areas && ai.growth_areas.length) {
-      aiHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:14px">
-        <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:8px">성장 과제</div>
+      aiHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px">
+        <div style="font-size:.72rem;color:var(--text-3);margin-bottom:8px">성장 과제</div>
         ${ai.growth_areas.map(g => `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
           <span style="color:var(--gold);flex-shrink:0">◇</span>
-          <p style="color:var(--ink-muted);line-height:1.6;font-size:.85rem;margin:0">${g}</p>
+          <p style="color:var(--text-2);line-height:1.6;font-size:.85rem;margin:0">${g}</p>
         </div>`).join('')}
       </div>`;
     }
@@ -645,13 +645,13 @@ function renderInterpretation(pillars, interpretation) {
   const elInfo = interp.element_info || {};
   if (elInfo.temperament) {
     elemHTML = `
-      <div style="background:var(--bg-elevated-2);border-radius:12px;padding:16px">
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px">
         <div style="font-size:.9rem;font-weight:600;margin-bottom:8px;color:${elColor}">
           ${primaryElHan} 기운의 특성
         </div>
-        <p style="color:var(--ink);line-height:1.7;margin-bottom:10px">${elInfo.temperament}</p>
+        <p style="color:var(--text);line-height:1.7;margin-bottom:10px">${elInfo.temperament}</p>
         <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:.85rem">
-          ${elInfo.relationship ? `<div><div style="color:var(--ink-faint);font-size:.75rem;margin-bottom:3px">관계 패턴</div><div style="color:var(--ink)">${elInfo.relationship}</div></div>` : ''}
+          ${elInfo.relationship ? `<div><div style="color:var(--text-3);font-size:.75rem;margin-bottom:3px">관계 패턴</div><div style="color:var(--text)">${elInfo.relationship}</div></div>` : ''}
         </div>
       </div>`;
   }
@@ -661,8 +661,8 @@ function renderInterpretation(pillars, interpretation) {
   const advice = interp.today_advice || '';
   const todayDayPillar = getTodayPillar();
   document.getElementById('today-advice').innerHTML = `
-    <p style="color:var(--ink);line-height:1.7;margin-bottom:0">💡 ${advice || '오늘도 자신의 기운에 맞게 차분하게 움직이세요.'}</p>
-    <p style="color:var(--ink-faint);font-size:.8rem;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">📅 오늘 일진: ${todayDayPillar}</p>
+    <p style="color:var(--text);line-height:1.7;margin-bottom:0">💡 ${advice || '오늘도 자신의 기운에 맞게 차분하게 움직이세요.'}</p>
+    <p style="color:var(--text-3);font-size:.8rem;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">📅 오늘 일진: ${todayDayPillar}</p>
   `;
 
   document.getElementById('interpretation-card').style.display = 'block';
@@ -718,27 +718,27 @@ async function calcEnergy() {
     // 에너지 설명: API 문구를 줄바꿈으로 분리해 단락으로 표시
     const energyParts = todayEnergy.split('\n\n').filter(Boolean);
     let energyHTML = energyParts.map((part, i) => {
-      if (i === 0) return `<p style="margin-bottom:14px;font-size:1rem;line-height:1.8;color:var(--ink)">${part}</p>`;
-      return `<p style="margin-bottom:10px;font-size:.92rem;line-height:1.7;color:var(--ink-muted)">${part}</p>`;
+      if (i === 0) return `<p style="margin-bottom:14px;font-size:1rem;line-height:1.8;color:var(--text)">${part}</p>`;
+      return `<p style="margin-bottom:10px;font-size:.92rem;line-height:1.7;color:var(--text-2)">${part}</p>`;
     }).join('');
 
     // 오늘 일진 정보
     if (todayPillar.pillar) {
-      energyHTML += `<div style="margin-top:14px;padding:12px;background:var(--bg-elevated-2);border-radius:10px;font-size:.85rem">
-        <span style="color:var(--ink-faint)">오늘 일진: </span>
+      energyHTML += `<div style="margin-top:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:10px;font-size:.85rem">
+        <span style="color:var(--text-3)">오늘 일진: </span>
         <span style="color:var(--gold);font-family:'Noto Serif KR',serif">${todayPillar.pillar}</span>
-        <span style="color:var(--ink-faint);margin-left:8px">(${todayPillar.stem || ''}${todayPillar.branch || ''})</span>
+        <span style="color:var(--text-3);margin-left:8px">(${todayPillar.stem || ''}${todayPillar.branch || ''})</span>
       </div>`;
     }
 
     // 일주 성격 및 강점
     if (personality) {
-      energyHTML += `<div style="margin-top:14px;padding:14px;background:rgba(184,147,74,.06);border-radius:10px;border-left:3px solid var(--gold)">
-        <div style="font-size:.78rem;color:var(--ink-faint);margin-bottom:6px">나의 일주(${data.day_pillar_key || ''}) 기질</div>
-        <p style="font-size:.9rem;color:var(--ink);line-height:1.7">${personality}</p>`;
+      energyHTML += `<div style="margin-top:14px;padding:14px;background:rgba(201,162,39,.06);border-radius:10px;border-left:3px solid var(--gold)">
+        <div style="font-size:.78rem;color:var(--text-3);margin-bottom:6px">나의 일주(${data.day_pillar_key || ''}) 기질</div>
+        <p style="font-size:.9rem;color:var(--text);line-height:1.7">${personality}</p>`;
       if (strengths.length) {
         energyHTML += `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">` +
-          strengths.map(s => `<span style="font-size:.78rem;background:var(--bg-elevated-2);padding:3px 10px;border-radius:50px;color:var(--ink-muted)">✦ ${s}</span>`).join('') +
+          strengths.map(s => `<span style="font-size:.78rem;background:rgba(255,255,255,.06);padding:3px 10px;border-radius:50px;color:var(--text-2)">✦ ${s}</span>`).join('') +
           `</div>`;
       }
       energyHTML += `</div>`;
@@ -746,7 +746,7 @@ async function calcEnergy() {
 
     // 기질 설명
     if (myEl.temperament) {
-      energyHTML += `<div style="margin-top:12px;font-size:.85rem;color:var(--ink-muted);line-height:1.6">${myEl.temperament}</div>`;
+      energyHTML += `<div style="margin-top:12px;font-size:.85rem;color:var(--text-2);line-height:1.6">${myEl.temperament}</div>`;
     }
 
     document.getElementById('energy-desc').innerHTML = energyHTML;
@@ -759,29 +759,29 @@ async function calcEnergy() {
       aiEHTML = `<div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
         <div style="font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:12px">✦ AI 오늘의 에너지 분석</div>`;
       if (aiE.energy_flow) {
-        aiEHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:14px;margin-bottom:10px">
-          <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:6px">오늘의 에너지 흐름</div>
-          <p style="color:var(--ink);line-height:1.75;font-size:.9rem">${aiE.energy_flow}</p>
+        aiEHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">오늘의 에너지 흐름</div>
+          <p style="color:var(--text);line-height:1.75;font-size:.9rem">${aiE.energy_flow}</p>
         </div>`;
       }
       if (aiE.recommended_activities && aiE.recommended_activities.length) {
-        aiEHTML += `<div style="background:rgba(122,155,110,.10);border:1px solid rgba(122,155,110,.25);border-radius:10px;padding:14px;margin-bottom:10px">
-          <div style="font-size:.72rem;color:var(--wood);font-weight:600;margin-bottom:8px">✅ 오늘 추천 활동</div>
+        aiEHTML += `<div style="background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="font-size:.72rem;color:#16a34a;font-weight:600;margin-bottom:8px">✅ 오늘 추천 활동</div>
           ${aiE.recommended_activities.map((a,i) => `<div style="display:flex;gap:8px;margin-bottom:6px">
             <span style="color:var(--gold);font-size:.8rem;flex-shrink:0">${i+1}.</span>
-            <span style="color:var(--ink);font-size:.87rem;line-height:1.6">${a}</span>
+            <span style="color:var(--text);font-size:.87rem;line-height:1.6">${a}</span>
           </div>`).join('')}
         </div>`;
       }
       if (aiE.cautions) {
-        aiEHTML += `<div style="background:rgba(184,105,90,.08);border:1px solid rgba(184,105,90,.2);border-radius:10px;padding:14px;margin-bottom:10px">
-          <div style="font-size:.72rem;color:var(--fire);font-weight:600;margin-bottom:6px">⚠️ 오늘 주의할 점</div>
-          <p style="color:var(--ink);line-height:1.7;font-size:.87rem">${aiE.cautions}</p>
+        aiEHTML += `<div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="font-size:.72rem;color:#ef4444;font-weight:600;margin-bottom:6px">⚠️ 오늘 주의할 점</div>
+          <p style="color:var(--text);line-height:1.7;font-size:.87rem">${aiE.cautions}</p>
         </div>`;
       }
       if (aiE.daily_message) {
-        aiEHTML += `<div style="text-align:center;padding:16px;background:rgba(184,147,74,.1);border-radius:12px;border:1px solid rgba(184,147,74,.3)">
-          <div style="font-size:.72rem;color:var(--ink-faint);margin-bottom:6px">오늘의 한마디</div>
+        aiEHTML += `<div style="text-align:center;padding:16px;background:rgba(201,162,39,.1);border-radius:12px;border:1px solid rgba(201,162,39,.3)">
+          <div style="font-size:.72rem;color:var(--text-3);margin-bottom:6px">오늘의 한마디</div>
           <div style="font-size:1.1rem;font-weight:700;color:var(--gold);font-family:'Noto Serif KR',serif">"${aiE.daily_message}"</div>
         </div>`;
       }
@@ -799,117 +799,77 @@ async function calcEnergy() {
   }
 }
 
-// ─────────────────────────────────────────────
-// 정밀 사주 풀이 (deep-reading, 3대 고전 통합) — v2 신규
-// ─────────────────────────────────────────────
-let _drSelectedMode = 'QUICK';
-const DR_MODE_LABEL = { QUICK: '빠른 풀이', STANDARD: '표준 풀이', DEEP: '심층 풀이' };
-const DR_MODE_ETA_TEXT = {
-  QUICK: '자평진전·적천수·궁통보감 핵심을 빠르게 풀이하고 있습니다...',
-  STANDARD: '3대 고전을 종합해 표준 깊이로 풀이하고 있습니다...',
-  DEEP: '세운표까지 포함한 심층 풀이를 진행하고 있습니다. 시간이 다소 걸립니다...'
-};
+// 궁합 계산
+async function calcCompat() {
+  const personA = {
+    birth_year: +document.getElementById('ca-year').value,
+    birth_month: +document.getElementById('ca-month').value,
+    birth_day: +document.getElementById('ca-day').value
+  };
+  const personB = {
+    birth_year: +document.getElementById('cb-year').value,
+    birth_month: +document.getElementById('cb-month').value,
+    birth_day: +document.getElementById('cb-day').value
+  };
 
-document.addEventListener('click', function(e) {
-  const modeBtn = e.target.closest('#dr-mode-segment .mode-btn');
-  if (modeBtn) {
-    document.querySelectorAll('#dr-mode-segment .mode-btn').forEach(b => b.classList.remove('active'));
-    modeBtn.classList.add('active');
-    _drSelectedMode = modeBtn.dataset.mode;
-  }
-});
-
-function _drSimpleMarkdownToHtml(text) {
-  // 최소한의 마크다운 → HTML 변환 (##, **, 줄바꿈)
-  let html = text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.*)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-  return `<p>${html}</p>`;
-}
-
-async function calcDeepReading() {
-  const year = +document.getElementById('dr-year').value;
-  const month = +document.getElementById('dr-month').value;
-  const day = +document.getElementById('dr-day').value;
-  const hourVal = document.getElementById('dr-hour').value;
-  const gender = document.getElementById('dr-gender').value;
-  const mode = _drSelectedMode;
-
-  if (!year || !month || !day) {
-    showToast('⚠️ 생년월일을 모두 입력해주세요');
-    return;
-  }
-
-  document.getElementById('deep-loading').style.display = 'block';
-  document.getElementById('deep-result').style.display = 'none';
-  document.getElementById('deep-rate-limit').style.display = 'none';
-  document.getElementById('deep-loading-text').textContent = DR_MODE_ETA_TEXT[mode] || DR_MODE_ETA_TEXT.QUICK;
-
-  // 경과 시간 타이머
-  const startedAt = Date.now();
-  const elapsedEl = document.getElementById('deep-elapsed');
-  const timerHandle = setInterval(() => {
-    const sec = Math.floor((Date.now() - startedAt) / 1000);
-    elapsedEl.textContent = `경과 시간: ${sec}초`;
-  }, 1000);
+  document.getElementById('compat-loading').style.display = 'block';
+  document.getElementById('compat-result').style.display = 'none';
 
   try {
-    const body = { birth_year: year, birth_month: month, birth_day: day, gender };
-    if (hourVal !== '') body.birth_hour = +hourVal;
+    // 두 사람 각각 사주 계산
+    const [resA, resB] = await Promise.all([
+      fetch(API+'/api/saju/calculate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...personA,lang:'ko'}) }),
+      fetch(API+'/api/saju/calculate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...personB,lang:'ko'}) })
+    ]);
+    const [dataA, dataB] = await Promise.all([resA.json(), resB.json()]);
 
-    // STANDARD/DEEP은 최대 5분까지 소요될 수 있어 클라이언트 타임아웃을 넉넉히 잡음
-    const clientTimeoutMs = mode === 'DEEP' ? 330000 : mode === 'STANDARD' ? 300000 : 180000;
+    const elA = dataA.pillars?.primary_element || '';
+    const elB = dataB.pillars?.primary_element || '';
 
-    const res = await fetch(API + `/api/saju/deep-reading?mode=${mode}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(clientTimeoutMs)
-    });
+    // 오행 궁합 점수 (상생/상극)
+    const compatMatrix = {
+      '木火':85,'火土':80,'土金':78,'金水':82,'水木':88,
+      '木水':75,'火木':70,'土火':72,'金土':68,'水金':74,
+      '木土':55,'火金':48,'土水':52,'金木':45,'水火':50,
+      '木木':65,'火火':60,'土土':68,'金金':63,'水水':67
+    };
+    const key1 = elA+elB, key2 = elB+elA;
+    const score = compatMatrix[key1] || compatMatrix[key2] || 65;
 
-    if (res.status === 429) {
-      document.getElementById('deep-rate-limit').style.display = 'block';
-      return;
-    }
+    const elColors = { '木':'var(--wood)','火':'var(--fire)','土':'var(--earth)','金':'var(--metal)','水':'var(--water)' };
+    const elNames2 = {'木':'목(木)','火':'화(火)','土':'토(土)','金':'금(金)','水':'수(水)'};
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '정밀 풀이 중 오류가 발생했습니다');
+    document.getElementById('compat-pillars').innerHTML = `
+      <div class="pillar-card" style="border-color:${elColors[elA]||'var(--border)'}">
+        <div class="pillar-label">甲 첫 번째</div>
+        <div class="pillar-han" style="color:${elColors[elA]||'var(--gold)'}">${dataA.pillars?.day?.pillar || '—'}</div>
+        <div class="pillar-ganjie">${elNames2[elA] || '—'} 기운</div>
+      </div>
+      <div class="pillar-card" style="border-color:${elColors[elB]||'var(--border)'}">
+        <div class="pillar-label">乙 두 번째</div>
+        <div class="pillar-han" style="color:${elColors[elB]||'var(--gold)'}">${dataB.pillars?.day?.pillar || '—'}</div>
+        <div class="pillar-ganjie">${elNames2[elB] || '—'} 기운</div>
+      </div>`;
 
-    document.getElementById('deep-result-title').textContent = `정밀 사주 풀이 결과 — ${DR_MODE_LABEL[mode] || mode}`;
-    const aiText = (data.ai && (data.ai.text || data.ai.content || (typeof data.ai === 'string' ? data.ai : ''))) || '';
-    const container = document.getElementById('deep-reading-content');
-    if (aiText) {
-      container.innerHTML = _drSimpleMarkdownToHtml(aiText);
-    } else if (typeof data.ai === 'object' && data.ai) {
-      // ai가 구조화 객체인 경우 각 필드를 순회 출력 (방어적 fallback — 이스케이프 필수)
-      const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      let html = '';
-      Object.entries(data.ai).forEach(([k, v]) => {
-        if (!v) return;
-        const safeVal = typeof v === 'string' ? _escHtml(v) : _escHtml(JSON.stringify(v));
-        html += `<div style="margin-bottom:14px"><div style="font-size:.75rem;color:var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">${_escHtml(k)}</div><div>${safeVal}</div></div>`;
-      });
-      container.innerHTML = html || '<p style="color:var(--ink-faint)">해석 결과를 표시할 수 없습니다.</p>';
-    } else {
-      container.innerHTML = '<p style="color:var(--ink-faint)">AI 해석을 사용할 수 없어 계산된 사주 데이터만 제공됩니다.</p>';
-    }
+    document.getElementById('compat-score-num').textContent = score;
+    setTimeout(() => {
+      document.getElementById('compat-bar').style.width = score+'%';
+    }, 100);
 
-    document.getElementById('deep-disclaimer').textContent =
-      data.legal || '본 내용은 명리학적 관점의 자기이해 도구이며 전문적 심리상담을 대체하지 않습니다.';
+    const scoreDesc = score >= 80 ? '매우 좋은 궁합입니다. 두 에너지가 서로를 보완합니다.' :
+                      score >= 65 ? '무난한 궁합입니다. 서로 이해하는 노력이 필요합니다.' :
+                                    '에너지 차이가 있습니다. 상대를 이해하는 소통이 중요합니다.';
 
-    document.getElementById('deep-result').style.display = 'block';
-    showToast('✦ 정밀 사주 풀이가 완료되었습니다');
+    document.getElementById('compat-desc').innerHTML = `
+      <p style="margin-top:8px">${scoreDesc}</p>
+      <p style="margin-top:12px;font-size:.8rem;color:var(--text-3)">본 궁합 분석은 명리학적 오행 기운의 조화도를 나타내며, 실제 궁합을 판단하는 기준이 아닙니다.</p>`;
+
+    document.getElementById('compat-result').style.display = 'block';
+    showToast('💑 궁합을 분석했습니다');
   } catch(e) {
-    const msg = e.name === 'TimeoutError' ? '⏱️ 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.' : '❌ ' + e.message;
-    showToast(msg);
+    showToast('❌ ' + e.message);
   } finally {
-    clearInterval(timerHandle);
-    document.getElementById('deep-loading').style.display = 'none';
+    document.getElementById('compat-loading').style.display = 'none';
   }
 }
 
@@ -928,8 +888,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(function(btn) {
 // 계산 버튼 이벤트
 var calcMap = {
   'btn-calc-saju':          calcSaju,
-  'btn-calc-deep':          calcDeepReading,
   'btn-calc-energy':        calcEnergy,
+  'btn-calc-compat':        calcCompat,
   'btn-calc-compatibility': calcCompatibility,
   'btn-calc-calendar':      calcCalendar,
 };
@@ -998,36 +958,36 @@ async function calcCompatibility() {
       aiCHTML = `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
         <div style="font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:12px">✦ AI 궁합 상세 분석</div>`;
       if (aiC.energy_dynamics) {
-        aiCHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:12px;margin-bottom:8px">
-          <div style="font-size:.7rem;color:var(--ink-faint);margin-bottom:5px">두 사람의 에너지 역학</div>
-          <p style="color:var(--ink);line-height:1.7;font-size:.87rem">${aiC.energy_dynamics}</p>
+        aiCHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:8px">
+          <div style="font-size:.7rem;color:var(--text-3);margin-bottom:5px">두 사람의 에너지 역학</div>
+          <p style="color:var(--text);line-height:1.7;font-size:.87rem">${aiC.energy_dynamics}</p>
         </div>`;
       }
       if (aiC.compatibility_strengths) {
-        aiCHTML += `<div style="background:rgba(122,155,110,.10);border:1px solid rgba(122,155,110,.25);border-radius:10px;padding:12px;margin-bottom:8px">
-          <div style="font-size:.7rem;color:var(--wood);font-weight:600;margin-bottom:5px">✅ 잘 맞는 부분</div>
-          <p style="color:var(--ink);line-height:1.7;font-size:.87rem">${aiC.compatibility_strengths}</p>
+        aiCHTML += `<div style="background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:12px;margin-bottom:8px">
+          <div style="font-size:.7rem;color:#16a34a;font-weight:600;margin-bottom:5px">✅ 잘 맞는 부분</div>
+          <p style="color:var(--text);line-height:1.7;font-size:.87rem">${aiC.compatibility_strengths}</p>
         </div>`;
       }
       if (aiC.potential_conflicts) {
-        aiCHTML += `<div style="background:rgba(184,105,90,.08);border:1px solid rgba(184,105,90,.2);border-radius:10px;padding:12px;margin-bottom:8px">
-          <div style="font-size:.7rem;color:var(--fire);font-weight:600;margin-bottom:5px">⚠️ 갈등 가능한 부분</div>
-          <p style="color:var(--ink);line-height:1.7;font-size:.87rem">${aiC.potential_conflicts}</p>
+        aiCHTML += `<div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:12px;margin-bottom:8px">
+          <div style="font-size:.7rem;color:#ef4444;font-weight:600;margin-bottom:5px">⚠️ 갈등 가능한 부분</div>
+          <p style="color:var(--text);line-height:1.7;font-size:.87rem">${aiC.potential_conflicts}</p>
         </div>`;
       }
       if (aiC.relationship_advice && aiC.relationship_advice.length) {
-        aiCHTML += `<div style="background:rgba(184,147,74,.06);border-radius:10px;padding:12px;margin-bottom:8px">
+        aiCHTML += `<div style="background:rgba(201,162,39,.06);border-radius:10px;padding:12px;margin-bottom:8px">
           <div style="font-size:.7rem;color:var(--gold);font-weight:600;margin-bottom:8px">💡 관계 발전 조언</div>
           ${aiC.relationship_advice.map((a,i) => `<div style="display:flex;gap:8px;margin-bottom:5px">
             <span style="color:var(--gold);flex-shrink:0">${i+1}.</span>
-            <span style="color:var(--ink);font-size:.85rem;line-height:1.6">${a}</span>
+            <span style="color:var(--text);font-size:.85rem;line-height:1.6">${a}</span>
           </div>`).join('')}
         </div>`;
       }
       if (aiC.long_term_outlook) {
-        aiCHTML += `<div style="background:var(--bg-elevated-2);border-radius:10px;padding:12px">
-          <div style="font-size:.7rem;color:var(--ink-faint);margin-bottom:5px">장기적 전망</div>
-          <p style="color:var(--ink);line-height:1.7;font-size:.87rem">${aiC.long_term_outlook}</p>
+        aiCHTML += `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px">
+          <div style="font-size:.7rem;color:var(--text-3);margin-bottom:5px">장기적 전망</div>
+          <p style="color:var(--text);line-height:1.7;font-size:.87rem">${aiC.long_term_outlook}</p>
         </div>`;
       }
       aiCHTML += `</div>`;
@@ -1075,19 +1035,19 @@ async function calcCalendar() {
     data.months.forEach(m => {
       const isCurrent = m.month === currentMonth;
       const elColor = elColors[m.month_element] || 'var(--gold)';
-      const scoreColor = m.luck_score >= 75 ? 'var(--wood)' : m.luck_score >= 65 ? 'var(--gold)' : 'var(--ink-muted)';
+      const scoreColor = m.luck_score >= 75 ? 'var(--wood)' : m.luck_score >= 65 ? 'var(--gold)' : 'var(--text-2)';
       gridHTML += `
-        <div class="month-cal-card" data-month="${m.month}" style="cursor:pointer;background:${isCurrent?'rgba(184,147,74,.12)':'var(--bg-elevated-2)'};border:1px solid ${isCurrent?'rgba(184,147,74,.4)':'var(--border)'};border-radius:14px;padding:14px;transition:var(--transition)" onmouseenter="this.style.background='rgba(255,255,255,.10)'" onmouseleave="this.style.background='${isCurrent?'rgba(184,147,74,.12)':'var(--bg-elevated-2)'}'">
+        <div class="month-cal-card" data-month="${m.month}" style="cursor:pointer;background:${isCurrent?'rgba(201,162,39,.12)':'rgba(255,255,255,.04)'};border:1px solid ${isCurrent?'rgba(201,162,39,.4)':'var(--border)'};border-radius:14px;padding:14px;transition:var(--transition)" onmouseenter="this.style.background='rgba(255,255,255,.10)'" onmouseleave="this.style.background='${isCurrent?'rgba(201,162,39,.12)':'rgba(255,255,255,.04)'}'">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-weight:600;font-size:.9rem;color:${isCurrent?'var(--gold)':'var(--ink)'}">
+            <span style="font-weight:600;font-size:.9rem;color:${isCurrent?'var(--gold)':'var(--text)'}">
               ${monthNames[m.month-1]}${isCurrent?' ●':''}
             </span>
             <span style="font-size:1.1rem;font-weight:700;color:${scoreColor}">${m.luck_score}</span>
           </div>
           <div style="font-size:.8rem;color:var(--gold);margin-bottom:6px">${m.theme}</div>
-          <div style="font-size:.78rem;color:var(--ink-muted);line-height:1.5;margin-bottom:6px">${m.advice}</div>
-          <div style="font-size:.72rem;color:var(--ink-faint)">길일 ${m.lucky_day}일 · <span style="color:${elColor}">${elNames[m.month_element]||''}</span></div>
-          <div style="margin-top:8px;font-size:.72rem;color:var(--ink-faint);text-align:right">📆 일별 달력 보기 →</div>
+          <div style="font-size:.78rem;color:var(--text-2);line-height:1.5;margin-bottom:6px">${m.advice}</div>
+          <div style="font-size:.72rem;color:var(--text-3)">길일 ${m.lucky_day}일 · <span style="color:${elColor}">${elNames[m.month_element]||''}</span></div>
+          <div style="margin-top:8px;font-size:.72rem;color:var(--text-3);text-align:right">📆 일별 달력 보기 →</div>
         </div>`;
     });
     document.getElementById('calendar-grid').innerHTML = gridHTML;
@@ -1147,7 +1107,7 @@ async function openMonthCalendar(targetYear, targetMonth, birthYear, birthMonth,
   } catch(e) {
     loading.style.display = 'none';
     body.style.display = 'block';
-    document.getElementById('day-cal-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--ink-muted);padding:24px">❌ ${e.message}</div>`;
+    document.getElementById('day-cal-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--text-2);padding:24px">❌ ${e.message}</div>`;
   } finally {
     loading.style.display = 'none';
     body.style.display = 'block';
@@ -1162,7 +1122,7 @@ function renderDayCalendar(data, targetYear, targetMonth) {
 
   // 요일 헤더: 일월화수목금토 (Sunday-first)
   const WEEKDAYS_HDR = ['일', '월', '화', '수', '목', '금', '토'];
-  const WEEKDAY_COLORS = ['var(--fire)', 'var(--ink)', 'var(--ink)', 'var(--ink)', 'var(--ink)', 'var(--ink)', 'var(--water)'];
+  const WEEKDAY_COLORS = ['var(--fire)', 'var(--text)', 'var(--text)', 'var(--text)', 'var(--text)', 'var(--text)', 'var(--water)'];
   let hdrHTML = '';
   WEEKDAYS_HDR.forEach((w, i) => {
     hdrHTML += `<div style="font-size:.72rem;font-weight:600;color:${WEEKDAY_COLORS[i]};padding:4px 0;">${w}</div>`;
@@ -1191,7 +1151,7 @@ function renderDayCalendar(data, targetYear, targetMonth) {
     // 게이지: luck_score 50~90 범위를 0~100%로 정규화
     // 하지만 실제 API 범위(50~76)가 좁으므로 절대값 기준으로 표시
     const scoreRatio = Math.min(1, Math.max(0, d.luck_score / 100)); // 0~100점 기준 직관적 표시
-    const barColor = d.luck_score >= 75 ? 'var(--wood)' : d.luck_score >= 65 ? 'var(--gold)' : 'var(--ink-faint)';
+    const barColor = d.luck_score >= 75 ? 'var(--wood)' : d.luck_score >= 65 ? 'var(--gold)' : 'var(--text-3)';
     const barWidth = Math.round(scoreRatio * 100);
 
     // 요일 색 (일=fire, 토=water)
@@ -1199,17 +1159,17 @@ function renderDayCalendar(data, targetYear, targetMonth) {
     const jsWeekday = dateObj.getDay(); // 0=Sun
     const isHoliday = (jsWeekday === 0);
     const isSat = (jsWeekday === 6);
-    const numColor = isToday ? 'var(--bg)' : isHoliday ? 'var(--fire)' : isSat ? 'var(--water)' : 'var(--ink)';
+    const numColor = isToday ? '#0d1b2a' : isHoliday ? 'var(--fire)' : isSat ? 'var(--water)' : 'var(--text)';
     const cellBg = isToday
       ? 'var(--gold)'
       : isLucky
-        ? 'rgba(184,147,74,.15)'
-        : 'var(--bg-elevated-2)';
+        ? 'rgba(201,162,39,.15)'
+        : 'rgba(255,255,255,.04)';
     const cellBorder = isToday
       ? 'var(--gold)'
       : isLucky
-        ? 'rgba(184,147,74,.5)'
-        : 'rgba(245,240,230,.1)';
+        ? 'rgba(201,162,39,.5)'
+        : 'rgba(255,255,255,.1)';
 
     gridHTML += `
       <div class="day-cell" data-day="${d.day}"
@@ -1217,11 +1177,11 @@ function renderDayCalendar(data, targetYear, targetMonth) {
         onclick="selectDayCell(${d.day})">
         ${isLucky ? '<div style="position:absolute;top:2px;right:2px;font-size:.6rem">🌟</div>' : ''}
         <div style="font-size:.85rem;font-weight:700;color:${numColor};line-height:1.2">${d.day}</div>
-        <div style="font-size:.65rem;color:${isToday?'var(--bg)':'var(--ink-faint)'};">${d.weekday}</div>
-        <div style="margin-top:4px;height:3px;border-radius:2px;background:rgba(245,240,230,.1);overflow:hidden">
-          <div style="height:100%;width:${barWidth}%;background:${isToday?'rgba(10,9,8,.4)':barColor};border-radius:2px"></div>
+        <div style="font-size:.65rem;color:${isToday?'#0d1b2a':'var(--text-3)'};">${d.weekday}</div>
+        <div style="margin-top:4px;height:3px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden">
+          <div style="height:100%;width:${barWidth}%;background:${isToday?'rgba(13,27,42,.4)':barColor};border-radius:2px"></div>
         </div>
-        <div style="font-size:.6rem;color:${isToday?'rgba(10,9,8,.7)':'var(--ink-faint)'};margin-top:2px">${d.luck_score}</div>
+        <div style="font-size:.6rem;color:${isToday?'rgba(13,27,42,.7)':'var(--text-3)'};margin-top:2px">${d.luck_score}</div>
       </div>`;
   });
 
@@ -1252,7 +1212,7 @@ function selectDayCell(day) {
 
   const detail = document.getElementById('day-cal-detail');
   const scoreRatio = Math.min(1, Math.max(0, d.luck_score / 100)); // 절대값 기준
-  const barColor = d.luck_score >= 75 ? 'var(--wood)' : d.luck_score >= 65 ? 'var(--gold)' : 'var(--ink-faint)';
+  const barColor = d.luck_score >= 75 ? 'var(--wood)' : d.luck_score >= 65 ? 'var(--gold)' : 'var(--text-3)';
   const barWidth = Math.round(scoreRatio * 100);
 
   document.getElementById('day-cal-detail-date').innerHTML =
@@ -1265,8 +1225,8 @@ function selectDayCell(day) {
 
   document.getElementById('day-cal-detail-score').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="font-size:.78rem;color:var(--ink-faint)">운 점수</div>
-      <div style="flex:1;height:8px;border-radius:4px;background:rgba(245,240,230,.1);overflow:hidden">
+      <div style="font-size:.78rem;color:var(--text-3)">운 점수</div>
+      <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden">
         <div style="height:100%;width:${barWidth}%;background:${barColor};border-radius:4px;transition:width .6s ease"></div>
       </div>
       <div style="font-size:1rem;font-weight:700;color:${barColor}">${d.luck_score}점</div>
@@ -1274,18 +1234,18 @@ function selectDayCell(day) {
     ${d.relation ? `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:.72rem;background:${relColor}20;color:${relColor};padding:2px 8px;border-radius:20px;font-weight:600">${d.relation}</span>
-      <span style="font-size:.78rem;color:var(--ink-muted)">${d.relation_desc || ''}</span>
-      ${d.day_element ? `<span style="font-size:.72rem;color:var(--ink-faint)">[${elNames[d.day_element]||d.day_element}일]</span>` : ''}
+      <span style="font-size:.78rem;color:var(--text-2)">${d.relation_desc || ''}</span>
+      ${d.day_element ? `<span style="font-size:.72rem;color:var(--text-3)">[${elNames[d.day_element]||d.day_element}일]</span>` : ''}
     </div>` : ''}
     ${d.suggest_good ? `
-    <div style="background:rgba(22,163,74,.08);border:1px solid rgba(122,155,110,.25);border-radius:8px;padding:8px 10px;margin-bottom:6px">
-      <div style="font-size:.72rem;color:var(--wood);font-weight:600;margin-bottom:3px">✅ 추천 활동</div>
-      <div style="font-size:.78rem;color:var(--ink-muted)">${d.suggest_good}</div>
+    <div style="background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:8px 10px;margin-bottom:6px">
+      <div style="font-size:.72rem;color:#16a34a;font-weight:600;margin-bottom:3px">✅ 추천 활동</div>
+      <div style="font-size:.78rem;color:var(--text-2)">${d.suggest_good}</div>
     </div>` : ''}
     ${d.suggest_avoid ? `
-    <div style="background:rgba(184,105,90,.09);border:1px solid rgba(184,105,90,.2);border-radius:8px;padding:8px 10px">
-      <div style="font-size:.72rem;color:var(--fire);font-weight:600;margin-bottom:3px">⚠️ 주의 활동</div>
-      <div style="font-size:.78rem;color:var(--ink-muted)">${d.suggest_avoid}</div>
+    <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:8px 10px">
+      <div style="font-size:.72rem;color:#ef4444;font-weight:600;margin-bottom:3px">⚠️ 주의 활동</div>
+      <div style="font-size:.78rem;color:var(--text-2)">${d.suggest_avoid}</div>
     </div>` : ''}
   `;
   detail.style.display = 'block';
@@ -1311,21 +1271,21 @@ async function loadSajuHistory() {
     container.style.display = 'block';
 
     const EL_NAMES = {'木':'木목','火':'火화','土':'土토','金':'金금','水':'水수'};
-    let html = '<div style="font-size:.78rem;font-weight:700;color:var(--ink-faint);letter-spacing:.06em;margin-bottom:10px">📜 최근 본 사주</div>';
+    let html = '<div style="font-size:.78rem;font-weight:700;color:var(--text-3);letter-spacing:.06em;margin-bottom:10px">📜 최근 본 사주</div>';
     data.history.forEach(h => {
       const dateStr = h.created_at ? new Date(h.created_at).toLocaleDateString('ko-KR', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
       const elName = EL_NAMES[h.primary_element] || h.primary_element || '';
       html += `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-elevated-2);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:background .2s"
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:background .2s"
           onclick="loadHistoryItem(${h.birth_year},${h.birth_month},${h.birth_day},${h.birth_hour||'null'},'${h.gender||'male'}')"
-          onmouseover="this.style.background='rgba(184,147,74,.1)'"
-          onmouseout="this.style.background='var(--bg-elevated-2)'">
+          onmouseover="this.style.background='rgba(201,162,39,.1)'"
+          onmouseout="this.style.background='rgba(255,255,255,.04)'">
           <div style="font-size:1.1rem;font-family:'Noto Serif KR',serif;color:var(--gold);min-width:32px;text-align:center">${h.day_pillar||'?'}</div>
           <div style="flex:1">
-            <div style="font-size:.85rem;color:var(--ink)">${h.birth_year}년 ${h.birth_month}월 ${h.birth_day}일${h.birth_hour!=null?' '+h.birth_hour+'시':''}</div>
-            <div style="font-size:.72rem;color:var(--ink-faint)">${elName} ${dateStr}</div>
+            <div style="font-size:.85rem;color:var(--text)">${h.birth_year}년 ${h.birth_month}월 ${h.birth_day}일${h.birth_hour!=null?' '+h.birth_hour+'시':''}</div>
+            <div style="font-size:.72rem;color:var(--text-3)">${elName} ${dateStr}</div>
           </div>
-          <div style="font-size:.75rem;color:var(--ink-faint)">▶</div>
+          <div style="font-size:.75rem;color:var(--text-3)">▶</div>
         </div>`;
     });
     container.innerHTML = html;
@@ -1349,7 +1309,7 @@ function loadHistoryItem(year, month, day, hour, gender) {
   // 자동 계산 실행
   document.getElementById('btn-calc-saju').click();
   // 나의 사주 탭으로 이동
-  const sajuTab = document.querySelector('.tab[data-tab="saju"]');
+  const sajuTab = document.querySelector('.tab[onclick*="saju"]');
   if (sajuTab) sajuTab.click();
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
@@ -1364,7 +1324,7 @@ function renderAiInterpretation(ai, containerOrIgnored) {
     <div style="font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:12px">✦ AI 명리학 상세 분석</div>`;
 
   if (ai.core_nature) {
-    html += `<div class="ai-section" style="border-left:3px solid var(--gold);border-radius:0 10px 10px 0;background:rgba(184,147,74,.06)">
+    html += `<div class="ai-section" style="border-left:3px solid var(--gold);border-radius:0 10px 10px 0;background:rgba(201,162,39,.06)">
       <h4>핵심 기질</h4>
       <p>${ai.core_nature}</p>
     </div>`;
