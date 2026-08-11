@@ -12,16 +12,29 @@ _async_client = None
 
 
 def _get_async_client():
-    """AsyncAnthropic 클라이언트 (asyncio 환경용)"""
+    """AsyncAnthropic 클라이언트 (asyncio 환경용).
+
+    [FIX-20260811] base_url이 internal-apigw-kr.hmg-corp.io로 하드코딩되어 있었음 —
+    이 게이트웨이는 서버 측에서 3분(PT3M) 하드 타임아웃을 강제해 STANDARD/DEEP처럼
+    긴 생성이 필요한 호출이 매번 504 Gateway Timeout으로 실패했다(실측 확인,
+    2026-08-11). ai_insight.py는 이미 os.getenv("ANTHROPIC_BASE_URL", ...)로
+    환경변수를 우선하고 있어 supervisor conf의 h-chat-api.autoever.com/claude-code/v2
+    경로를 정상적으로 타는데, 이 파일만 하드코딩 때문에 그 설정을 무시하고 있었다.
+    동일 서비스 내 다른 모듈과 경로를 통일한다.
+    """
     global _async_client
     if _async_client is None:
         key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not key:
             return None
+        base_url = os.environ.get(
+            "ANTHROPIC_BASE_URL",
+            "https://internal-apigw-kr.hmg-corp.io/hchat-in/api/v3/claude",
+        )
         try:
             _async_client = anthropic.AsyncAnthropic(
                 api_key=key,
-                base_url="https://internal-apigw-kr.hmg-corp.io/hchat-in/api/v3/claude",
+                base_url=base_url,
             )
         except Exception:
             return None
@@ -69,15 +82,23 @@ def _extract_json(raw: str) -> dict:
 
 
 def _get_client():
+    """[FIX-20260811] base_url을 환경변수 우선으로 변경 — _get_async_client()와 동일 이유.
+    supervisor conf의 ANTHROPIC_BASE_URL(h-chat-api.autoever.com/claude-code/v2)을
+    타도록 통일한다. 내부망 게이트웨이(internal-apigw-kr)는 폴백으로만 유지.
+    """
     global _client
     if _client is None:
         key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not key:
             return None
+        base_url = os.environ.get(
+            "ANTHROPIC_BASE_URL",
+            "https://internal-apigw-kr.hmg-corp.io/hchat-in/api/v3/claude",
+        )
         try:
             _client = anthropic.Anthropic(
                 api_key=key,
-                base_url="https://internal-apigw-kr.hmg-corp.io/hchat-in/api/v3/claude",
+                base_url=base_url,
             )
         except Exception:
             return None
@@ -95,8 +116,15 @@ EARTHLY_BRANCHES_KR = {
 ELEMENTS_KR = {"木":"목","火":"화","土":"토","金":"금","水":"수"}
 
 
-def _call_ai(prompt: str, system: str = None, max_tokens: int = 800) -> str:
-    """AI 호출 공통 함수. 실패 시 빈 문자열 반환."""
+def _call_ai(prompt: str, system: str = None, max_tokens: int = 800, timeout: float = 45.0) -> str:
+    """AI 호출 공통 함수. 실패 시 빈 문자열 반환.
+
+    timeout: 기본 45초 — 대부분의 짧은 해석(daily/compatibility 등)에 충분하다.
+    DEEP READING처럼 system 프롬프트가 길고 max_tokens가 큰 호출은 반드시
+    호출부에서 넉넉한 timeout을 명시적으로 전달해야 한다 (2026-08-11 실측:
+    STANDARD 모드가 45초 고정 timeout에서 APITimeoutError로 매번 실패해
+    폴백 응답만 반환하던 실제 프로덕션 버그).
+    """
     client = _get_client()
     if not client:
         import logging
@@ -106,7 +134,7 @@ def _call_ai(prompt: str, system: str = None, max_tokens: int = 800) -> str:
         create_kwargs = {
             "model": "claude-sonnet-4-6",
             "max_tokens": max_tokens,
-            "timeout": 45.0,
+            "timeout": timeout,
             "messages": [{"role": "user", "content": prompt}],
         }
         if system:
@@ -114,8 +142,10 @@ def _call_ai(prompt: str, system: str = None, max_tokens: int = 800) -> str:
         resp = client.messages.create(**create_kwargs)
         text = resp.content[0].text if resp.content else ""
         import logging
-        logging.warning(f"[SajuAI] 응답 {len(text)}자, stop={resp.stop_reason}")
-        print(f"[SajuAI] 응답 {len(text)}자, stop={resp.stop_reason}", flush=True)
+        usage = getattr(resp, "usage", None)
+        out_tokens = getattr(usage, "output_tokens", "?") if usage else "?"
+        logging.warning(f"[SajuAI] 응답 {len(text)}자, stop={resp.stop_reason}, output_tokens={out_tokens}")
+        print(f"[SajuAI] 응답 {len(text)}자, stop={resp.stop_reason}, output_tokens={out_tokens}", flush=True)
         return text
     except Exception as e:
         import logging, traceback
@@ -308,10 +338,38 @@ def interpret_compatibility_api(pillars_a: dict, pillars_b: dict, score: int, re
 # ─────────────────────────────────────────────
 
 # 모드별 max_tokens — DEEP은 1~10단계 전체 상세 + 20년 세운표까지 다루므로 상향
+# 2026-08-11 실측 수정 이력:
+#   1차: QUICK=1500 -> 매번 stop=max_tokens로 잘림 (1507~1508자에서 컷)
+#   2차: QUICK=2500 -> 여전히 stop=max_tokens (2572자에서 컷, STANDARD=4500은 4574자로 완결)
+#   3차: QUICK=4000 -> 여전히 stop=max_tokens (4046자에서 컷). 한글+한자 혼용 텍스트라
+#        토큰당 글자수 비율이 낮아(한자 1글자=1토큰급) 예상보다 토큰 소모가 크다.
+#   4차: QUICK=8000 -> 여전히 stop=max_tokens (8048자, output_tokens=8000).
+#   5차(최종 실측): max_tokens=12000, timeout=280s로 직접 재현 -> QUICK이 자연완결
+#        (stop=end_turn)까지 output_tokens=9225, 소요 354.99초. 10단계 구조 자체가
+#        방대해 QUICK도 실질적으로 STANDARD급 분량이 나온다는 것을 실측 확인.
+#        STANDARD/DEEP은 QUICK보다 더 길므로 비례 상향.
+#   6차(진짜 근본원인 발견, 2026-08-11): 위 실측에서 STANDARD/DEEP이 매번 504
+#        Gateway Timeout("Response took longer than timeout: PT3M")으로 실패한 진짜
+#        원인은 max_tokens/timeout이 아니라 _get_client()/_get_async_client()가
+#        ANTHROPIC_BASE_URL 환경변수를 무시하고 internal-apigw-kr.hmg-corp.io를
+#        하드코딩하고 있었던 것. 이 게이트웨이가 서버측 3분 하드 타임아웃을 강제한다.
+#        supervisor conf가 이미 지정한 h-chat-api.autoever.com/claude-code/v2는
+#        3분 제한이 없음을 실측 확인(242초 자연완결, output_tokens=12828).
+#        base_url을 os.environ.get("ANTHROPIC_BASE_URL", ...)로 수정해 근본 해결.
+#        실측 결과 STANDARD가 16000에서도 정확히 소진되는 경우가 있어 여유를 더 둔다.
 DEEP_READING_MAX_TOKENS = {
-    "QUICK": 1500,
-    "STANDARD": 3000,
-    "DEEP": 6000,
+    "QUICK": 12000,
+    "STANDARD": 20000,
+    "DEEP": 24000,
+}
+
+# 모드별 timeout(초) — client-side timeout. h-chat-api.autoever.com 게이트웨이는
+# 3분 제한이 없음이 확인됐으므로(위 6차 로그 참조), 실측 소요시간(QUICK 355s,
+# STANDARD 242s)에 여유를 둔 값으로 설정. 과도하게 크게 잡을 필요는 없다.
+DEEP_READING_TIMEOUT = {
+    "QUICK": 420.0,
+    "STANDARD": 420.0,
+    "DEEP": 500.0,
 }
 
 
@@ -343,9 +401,10 @@ def interpret_saju_deep(ctx, mode: str = "STANDARD") -> dict:
     ctx.mode = resolved_mode
 
     prompt = build_deep_reading_prompt(ctx)
-    max_tokens = DEEP_READING_MAX_TOKENS.get(resolved_mode, 3000)
+    max_tokens = DEEP_READING_MAX_TOKENS.get(resolved_mode, 4500)
+    timeout = DEEP_READING_TIMEOUT.get(resolved_mode, 120.0)
 
-    text = _call_ai(prompt["user"], system=prompt["system"], max_tokens=max_tokens)
+    text = _call_ai(prompt["user"], system=prompt["system"], max_tokens=max_tokens, timeout=timeout)
 
     return {
         "text": text,
